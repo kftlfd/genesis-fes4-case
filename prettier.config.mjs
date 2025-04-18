@@ -3,7 +3,7 @@ const config = {
   semi: true,
   singleQuote: true,
   printWidth: 100,
-  trailingComma: "all",
+  trailingComma: 'all',
 };
 
 export default config;
