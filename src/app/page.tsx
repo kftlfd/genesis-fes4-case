@@ -40,7 +40,7 @@ export default function Home() {
             : isError || !data
               ? 'error'
               : data.data.map((track) => (
-                  <div key={track.id} className="border border-amber-900 p-2">
+                  <div key={track.id} className="rounded-sm border border-amber-900 p-2">
                     {track.artist} - {track.title}
                   </div>
                 ))}
