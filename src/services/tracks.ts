@@ -72,3 +72,60 @@ export const useCreateTrackMutation = () =>
   useMutation({
     mutationFn: createTrackRequest,
   });
+
+const deleteTracksResponseSchema = z.object({
+  success: z.array(z.string()),
+  failed: z.array(z.string()),
+});
+
+type DeleteTracksResult = z.infer<typeof deleteTracksResponseSchema>;
+
+const deleteSingleTrackRequest = async (id: string) => {
+  try {
+    const response = await fetch(`${env.API_URL}/api/tracks/${id}`, { method: 'DELETE' });
+    if (response.ok)
+      return {
+        success: [id],
+        failed: [],
+      } satisfies DeleteTracksResult;
+    throw new Error('request failed');
+  } catch {
+    return {
+      success: [],
+      failed: [id],
+    } satisfies DeleteTracksResult;
+  }
+};
+
+const deleteMultipleTracksRequest = async (ids: string[]) => {
+  try {
+    const response = await fetch(`${env.API_URL}/api/tracks/delete`, {
+      method: 'POST',
+      body: JSON.stringify({ ids }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    return deleteTracksResponseSchema.parse(await response.json());
+  } catch {
+    return {
+      success: [],
+      failed: ids,
+    } satisfies DeleteTracksResult;
+  }
+};
+
+const deleteTracksSchema = z.array(z.string()).min(1);
+
+const deleteTracksRequest = (ids: string[]) => {
+  const idsToDelete = deleteTracksSchema.parse(ids);
+
+  return idsToDelete.length > 1
+    ? deleteMultipleTracksRequest(idsToDelete)
+    : deleteSingleTrackRequest(idsToDelete[0]);
+};
+
+export const useDeleteTracksMutation = () =>
+  useMutation({
+    mutationFn: deleteTracksRequest,
+  });

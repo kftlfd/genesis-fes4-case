@@ -2,13 +2,14 @@
 
 import { CreateTrackModal } from '@/components/tracks/CreateTrackModal';
 import { Button } from '@/components/ui/button';
-import { useGetTracksListQuery } from '@/services/tracks';
-import { PlusIcon } from 'lucide-react';
+import { useDeleteTracksMutation, useGetTracksListQuery } from '@/services/tracks';
+import { PlusIcon, Trash } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Home() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const { data, isLoading, isError, refetch } = useGetTracksListQuery();
+  const deleteMutation = useDeleteTracksMutation();
 
   return (
     <>
@@ -40,8 +41,24 @@ export default function Home() {
             : isError || !data
               ? 'error'
               : data.data.map((track) => (
-                  <div key={track.id} className="rounded-sm border border-amber-900 p-2">
-                    {track.artist} - {track.title}
+                  <div
+                    key={track.id}
+                    className="rounded-sm border border-amber-900 p-2 flex justify-between"
+                  >
+                    <div>
+                      {track.artist} - {track.title}
+                    </div>
+
+                    <div>
+                      <Button
+                        onClick={() =>
+                          deleteMutation.mutate([track.id], { onSuccess: () => refetch() })
+                        }
+                        disabled={deleteMutation.isPending}
+                      >
+                        <Trash />
+                      </Button>
+                    </div>
                   </div>
                 ))}
         </div>
