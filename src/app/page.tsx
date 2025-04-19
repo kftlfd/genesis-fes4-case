@@ -1,6 +1,9 @@
 'use client';
 
+import { CreateTrackModal } from '@/components/tracks/CreateTrackModal';
+import { Button } from '@/components/ui/button';
 import { useGetTracksListQuery } from '@/services/tracks';
+import { PlusIcon } from 'lucide-react';
 
 export default function Home() {
   const { data, isLoading, isError } = useGetTracksListQuery();
@@ -10,7 +13,16 @@ export default function Home() {
       <header className="container mx-auto flex items-center justify-between py-4">
         <h1>Tracks</h1>
         <div>
-          <button>+ Create</button>
+          <CreateTrackModal
+            trigger={
+              <Button>
+                <span className="flex items-center gap-1">
+                  <PlusIcon />
+                  <span>Create</span>
+                </span>
+              </Button>
+            }
+          />
         </div>
       </header>
 
