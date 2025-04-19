@@ -1,18 +1,14 @@
-import { FC, FormEvent, ReactNode } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '../ui/dialog';
+'use client';
+
+import { FC, FormEvent } from 'react';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import { GenresInput } from './GenresInput';
+import { useCreateTrackMutation } from '@/services/tracks';
 
 const createTrackSchema = z.object({
   artist: z.string().min(1),
@@ -29,12 +25,16 @@ const defaultValues: TrackInputValues = {
   title: '',
   album: '',
   genres: [],
-  coverImage: '',
+  coverImage: undefined,
 };
 
 export const CreateTrackModal: FC<{
-  trigger: ReactNode;
-}> = ({ trigger }) => {
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  onSubmitSuccessful?: () => void;
+}> = ({ isOpen, onOpenChange, onSubmitSuccessful }) => {
+  const createTrackMutation = useCreateTrackMutation();
+
   const form = useForm({
     defaultValues,
     validators: {
@@ -43,8 +43,10 @@ export const CreateTrackModal: FC<{
     onSubmitInvalid: ({ value }) => {
       console.log('invalid', { value });
     },
-    onSubmit: ({ value, meta }) => {
+    onSubmit: async ({ value, meta }) => {
       console.log({ value, meta });
+      await createTrackMutation.mutateAsync({ ...value, coverImage: value.coverImage ?? '' });
+      onSubmitSuccessful?.();
     },
   });
 
@@ -55,27 +57,37 @@ export const CreateTrackModal: FC<{
   };
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (open) form.reset();
+        onOpenChange(open);
+      }}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create new track</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2">
+        <form onSubmit={onSubmit} className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-4">
           <form.Field
             name="artist"
             children={(field) => (
               <>
                 <Label htmlFor="artist">Artist</Label>
-                <Input
-                  id="artist"
-                  type="text"
-                  name={field.name}
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="Artist"
-                />
+                <div>
+                  <Input
+                    id="artist"
+                    type="text"
+                    name={field.name}
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="Artist"
+                  />
+                  {field.state.meta.errors && (
+                    <em>{field.state.meta.errors.map((e) => e?.message).join(', ')}</em>
+                  )}
+                </div>
               </>
             )}
           />
@@ -85,14 +97,19 @@ export const CreateTrackModal: FC<{
             children={(field) => (
               <>
                 <Label htmlFor="title">Title</Label>
-                <Input
-                  id="title"
-                  type={'text'}
-                  name={field.name}
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="Title"
-                />
+                <div>
+                  <Input
+                    id="title"
+                    type={'text'}
+                    name={field.name}
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="Title"
+                  />
+                  {field.state.meta.errors && (
+                    <em>{field.state.meta.errors.map((e) => e?.message).join(', ')}</em>
+                  )}
+                </div>
               </>
             )}
           />
@@ -102,14 +119,19 @@ export const CreateTrackModal: FC<{
             children={(field) => (
               <>
                 <Label htmlFor="album">Album</Label>
-                <Input
-                  id="album"
-                  type={'text'}
-                  name={field.name}
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="Album"
-                />
+                <div>
+                  <Input
+                    id="album"
+                    type={'text'}
+                    name={field.name}
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="Album"
+                  />
+                  {field.state.meta.errors && (
+                    <em>{field.state.meta.errors.map((e) => e?.message).join(', ')}</em>
+                  )}
+                </div>
               </>
             )}
           />
@@ -129,21 +151,34 @@ export const CreateTrackModal: FC<{
             children={(field) => (
               <>
                 <Label htmlFor="coverImage">Cover Image</Label>
-                <Input
-                  id="coverImage"
-                  type={'text'}
-                  name={field.name}
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="URL"
-                />
+                <div>
+                  <Input
+                    id="coverImage"
+                    type={'text'}
+                    name={field.name}
+                    value={field.state.value ?? ''}
+                    onChange={(e) =>
+                      field.handleChange(e.target.value === '' ? undefined : e.target.value)
+                    }
+                    placeholder="URL"
+                  />
+                  {field.state.meta.errors && (
+                    <em>{field.state.meta.errors.map((e) => e?.message).join(', ')}</em>
+                  )}
+                </div>
               </>
             )}
           />
         </form>
 
         <DialogFooter className="flex justify-end">
-          <Button onClick={() => onSubmit()}>Create</Button>
+          <form.Subscribe
+            children={(f) => (
+              <Button onClick={() => onSubmit()} disabled={f.isSubmitting}>
+                {f.isSubmitting ? 'Loading...' : f.isSubmitSuccessful ? 'Created' : 'Create'}
+              </Button>
+            )}
+          />
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -4,24 +4,31 @@ import { CreateTrackModal } from '@/components/tracks/CreateTrackModal';
 import { Button } from '@/components/ui/button';
 import { useGetTracksListQuery } from '@/services/tracks';
 import { PlusIcon } from 'lucide-react';
+import { useState } from 'react';
 
 export default function Home() {
-  const { data, isLoading, isError } = useGetTracksListQuery();
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const { data, isLoading, isError, refetch } = useGetTracksListQuery();
 
   return (
     <>
       <header className="container mx-auto flex items-center justify-between py-4">
-        <h1>Tracks</h1>
+        <h1 className="text-3xl">Tracks</h1>
         <div>
+          <Button onClick={() => setCreateModalOpen(true)}>
+            <span className="flex items-center gap-1">
+              <PlusIcon />
+              <span>Create</span>
+            </span>
+          </Button>
           <CreateTrackModal
-            trigger={
-              <Button>
-                <span className="flex items-center gap-1">
-                  <PlusIcon />
-                  <span>Create</span>
-                </span>
-              </Button>
-            }
+            isOpen={createModalOpen}
+            onOpenChange={setCreateModalOpen}
+            onSubmitSuccessful={async () => {
+              refetch();
+              await new Promise((res) => setTimeout(res, 1000));
+              setCreateModalOpen(false);
+            }}
           />
         </div>
       </header>
@@ -33,7 +40,7 @@ export default function Home() {
             : isError || !data
               ? 'error'
               : data.data.map((track) => (
-                  <div key={track.id} className="border border-amber-50 p-2">
+                  <div key={track.id} className="border border-amber-900 p-2">
                     {track.artist} - {track.title}
                   </div>
                 ))}

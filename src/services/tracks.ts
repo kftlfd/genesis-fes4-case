@@ -56,6 +56,9 @@ const createTrackRequest = async (track: CreateTrackBody) => {
   const response = await fetch(`${env.API_URL}/api/tracks`, {
     method: 'POST',
     body: JSON.stringify(body),
+    headers: {
+      'Content-Type': 'application/json',
+    },
   });
   try {
     return trackSchema.parse(await response.json());

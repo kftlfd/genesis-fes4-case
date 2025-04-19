@@ -1,3 +1,5 @@
+'use client';
+
 import { FC, KeyboardEvent, useState } from 'react';
 import { Badge } from '../ui/badge';
 import { PlusIcon, XIcon } from 'lucide-react';
