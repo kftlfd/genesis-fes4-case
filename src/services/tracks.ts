@@ -15,6 +15,8 @@ const trackSchema = z.object({
   updatedAt: z.string(),
 });
 
+export type Track = z.infer<typeof trackSchema>;
+
 const tracksListSchema = z.object({
   data: z.array(trackSchema),
   meta: z.object({
@@ -102,6 +104,28 @@ const createTrackRequest = async (track: CreateTrackBody) => {
 export const useCreateTrackMutation = () =>
   useMutation({
     mutationFn: createTrackRequest,
+  });
+
+const editTrackRequest = async (track: Track) => {
+  try {
+    const body = createTrackSchema.parse(track);
+    const response = await fetch(`${env.API_URL}/api/tracks/${track.id}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    return trackSchema.parse(await response.json());
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+};
+
+export const useEditTrackMutation = () =>
+  useMutation({
+    mutationFn: editTrackRequest,
   });
 
 const deleteTracksResponseSchema = z.object({
