@@ -17,6 +17,7 @@ import { Edit, PlusIcon, Trash } from 'lucide-react';
 import { FC, useState } from 'react';
 import { Card, CardContent } from '../ui/card';
 import { EditTrackModal } from './EditTrackModal';
+import { Badge } from '../ui/badge';
 
 export const TracksListPage: FC = () => {
   const [curPage, setCurPage] = useState(1);
@@ -96,7 +97,7 @@ export const TracksListPage: FC = () => {
       </div>
 
       <main className="container mx-auto">
-        <div className="flex flex-col gap-4">
+        <div id="tracks-list" className="flex flex-col gap-4">
           {isLoading
             ? 'loading...'
             : isError || !data
@@ -116,8 +117,28 @@ export const TracksListPage: FC = () => {
                         }}
                       />
 
+                      <picture>
+                        <source srcSet={track.coverImage} />
+                        <img
+                          className="block h-20 w-20 object-cover object-center"
+                          alt={`${track.artist} - ${track.title}`}
+                          title={`${track.artist} - ${track.title}`}
+                          src="https://picsum.photos/seed/Johnny%20B.%20Goode/300/300"
+                        />
+                      </picture>
+
                       <div className="grow">
-                        {track.artist} - {track.title}
+                        <div>
+                          {track.artist} - {track.title}
+                        </div>
+                        <div>{track.album}</div>
+                        {track.genres.length > 0 && (
+                          <div className="flex gap-1 pt-2">
+                            {track.genres.map((g) => (
+                              <Badge key={g}>{g}</Badge>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex gap-1">
@@ -153,7 +174,7 @@ export const TracksListPage: FC = () => {
 
               {Array.from({ length: curPage - 1 }, (_, i) => i + 1).map((p) => (
                 <PaginationItem key={p} onClick={() => setCurPage(p)}>
-                  <PaginationLink href="#">{p}</PaginationLink>
+                  <PaginationLink href={`?p=${p}#tracks-list`}>{p}</PaginationLink>
                 </PaginationItem>
               ))}
 
@@ -168,7 +189,7 @@ export const TracksListPage: FC = () => {
                 (_, i) => curPage + 1 + i,
               ).map((p) => (
                 <PaginationItem key={p} onClick={() => setCurPage(p)}>
-                  <PaginationLink href="#">{p}</PaginationLink>
+                  <PaginationLink href={`?p=${p}#tracks-list`}>{p}</PaginationLink>
                 </PaginationItem>
               ))}
 
