@@ -24,6 +24,8 @@ import { LoadingSpinner } from '../ui/loading';
 // import { useSearchParams } from 'next/navigation';
 import { PagePagination } from './Pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { useDebouncedValue } from '@/hooks/use-debouce';
+import { Input } from '../ui/input';
 
 // const parseCurPage = (val: string | null) => {
 //   const p = Number(val);
@@ -38,22 +40,25 @@ export const TracksListPage: FC = () => {
     // const p = Number(searchParams.get('p'));
     // return Number.isFinite(p) && p > 0 ? p : 1;
   });
-
   // const curPage = parseCurPage(searchParams.get('p'));
-
   // console.log({ p: searchParams.get('p') });
+  const [curPageSize] = useState(4);
 
   const [curSort, setCurSort] = useState<GetTracksListParams['sort']>();
   const [curOrder, setCurOrder] = useState<GetTracksListParams['order']>();
 
   const [genreFilter, setGenreFilter] = useState<string>();
+  const [artistFilter, setArtistFilter] = useState<string>();
+  const [searchFilter, setSearchFilter] = useState<string>();
 
   const { data, isLoading, isError, refetch } = useGetTracksListQuery({
     page: curPage,
-    limit: 4,
+    limit: curPageSize,
     sort: curSort,
     order: curOrder,
     genre: genreFilter,
+    artist: useDebouncedValue(artistFilter, 300)[0],
+    search: useDebouncedValue(searchFilter, 300)[0],
   });
 
   const genresQuery = useGetGenresListQuery();
@@ -229,6 +234,30 @@ export const TracksListPage: FC = () => {
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        <div className="flex items-center gap-1 rounded-sm border p-1">
+          <span>Artist</span>
+          <Input
+            type="text"
+            value={artistFilter ?? ''}
+            onChange={(e) => {
+              const v = e.target.value;
+              setArtistFilter(v === '' ? undefined : v);
+            }}
+          />
+        </div>
+
+        <div className="flex items-center gap-1 rounded-sm border p-1">
+          <span>Search</span>
+          <Input
+            type="text"
+            value={searchFilter ?? ''}
+            onChange={(e) => {
+              const v = e.target.value;
+              setSearchFilter(v === '' ? undefined : v);
+            }}
+          />
         </div>
       </div>
 
