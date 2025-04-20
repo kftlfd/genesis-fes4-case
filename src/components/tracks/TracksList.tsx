@@ -3,15 +3,7 @@
 import { CreateTrackModal } from '@/components/tracks/CreateTrackModal';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination';
+
 import {
   Track,
   useDeleteTracksMutation,
@@ -26,9 +18,28 @@ import { Badge } from '../ui/badge';
 import { env } from '@/core/env';
 import { UploadTrackModal } from './UploadTrackModal';
 import { ConfirmModal } from './ConfirmModal';
+import { LoadingSpinner } from '../ui/loading';
+// import { useSearchParams } from 'next/navigation';
+import { PagePagination } from './Pagination';
+
+// const parseCurPage = (val: string | null) => {
+//   const p = Number(val);
+//   return Number.isFinite(p) && p > 0 ? p : 1;
+// };
 
 export const TracksListPage: FC = () => {
-  const [curPage, setCurPage] = useState(1);
+  // const searchParams = useSearchParams();
+
+  const [curPage, setCurPage] = useState(() => {
+    return 1;
+    // const p = Number(searchParams.get('p'));
+    // return Number.isFinite(p) && p > 0 ? p : 1;
+  });
+
+  // const curPage = parseCurPage(searchParams.get('p'));
+
+  // console.log({ p: searchParams.get('p') });
+
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const { data, isLoading, isError, refetch } = useGetTracksListQuery({ page: curPage });
   const deleteMutation = useDeleteTracksMutation();
@@ -165,143 +176,118 @@ export const TracksListPage: FC = () => {
 
       <main className="container mx-auto">
         <div id="tracks-list" className="flex flex-col gap-4">
-          {isLoading
-            ? 'loading...'
-            : isError || !data
-              ? 'error'
-              : data.data.map((track) => (
-                  <Card key={track.id} className="py-3">
-                    <CardContent className="flex gap-2 px-3">
-                      <Checkbox
-                        checked={selectedIds.includes(track.id)}
-                        onCheckedChange={(checked) => {
-                          if (checked === true && !selectedIds.includes(track.id)) {
-                            setSelectedIds((prev) => [...prev, track.id]);
-                          }
-                          if (checked === false) {
-                            setSelectedIds((prev) => prev.filter((p) => p !== track.id));
-                          }
-                        }}
-                      />
+          {isLoading ? (
+            <div className="flex justify-center py-6">
+              <LoadingSpinner size={100} width={4} />
+            </div>
+          ) : isError || !data ? (
+            'error'
+          ) : (
+            data.data.map((track) => (
+              <Card key={track.id} className="py-3">
+                <CardContent className="flex gap-2 px-3">
+                  <Checkbox
+                    checked={selectedIds.includes(track.id)}
+                    onCheckedChange={(checked) => {
+                      if (checked === true && !selectedIds.includes(track.id)) {
+                        setSelectedIds((prev) => [...prev, track.id]);
+                      }
+                      if (checked === false) {
+                        setSelectedIds((prev) => prev.filter((p) => p !== track.id));
+                      }
+                    }}
+                  />
 
-                      <picture>
-                        <source srcSet={track.coverImage} />
-                        <img
-                          className="block h-20 w-20 object-cover object-center"
-                          alt={`${track.artist} - ${track.title}`}
-                          title={`${track.artist} - ${track.title}`}
-                          src="https://picsum.photos/seed/Johnny%20B.%20Goode/300/300"
+                  <picture>
+                    <source srcSet={track.coverImage} />
+                    <img
+                      className="block h-20 w-20 object-cover object-center"
+                      alt={`${track.artist} - ${track.title}`}
+                      title={`${track.artist} - ${track.title}`}
+                      src="https://picsum.photos/seed/Johnny%20B.%20Goode/300/300"
+                    />
+                  </picture>
+
+                  <div className="grow">
+                    <div>
+                      {track.artist} - {track.title}
+                    </div>
+                    <div>{track.album}</div>
+
+                    {track.genres.length > 0 && (
+                      <div className="flex gap-1 pt-2">
+                        {track.genres.map((g) => (
+                          <Badge key={g}>{g}</Badge>
+                        ))}
+                      </div>
+                    )}
+
+                    {track.audioFile && (
+                      <audio controls>
+                        <source
+                          src={`${env.API_URL}/api/files/${track.audioFile}`}
+                          type="audio/mp3"
                         />
-                      </picture>
+                      </audio>
+                    )}
+                  </div>
 
-                      <div className="grow">
-                        <div>
-                          {track.artist} - {track.title}
-                        </div>
-                        <div>{track.album}</div>
+                  <div className="flex gap-1">
+                    <Button
+                      onClick={() => {
+                        setEditModalOpen(true);
+                        setTrackToEdit(track);
+                      }}
+                    >
+                      <Edit />
+                    </Button>
 
-                        {track.genres.length > 0 && (
-                          <div className="flex gap-1 pt-2">
-                            {track.genres.map((g) => (
-                              <Badge key={g}>{g}</Badge>
-                            ))}
-                          </div>
-                        )}
+                    {track.audioFile ? (
+                      <Button
+                        onClick={() => {
+                          setDeleteUploadId(track.id);
+                          setConfirmDeleteUploadModalOpen(true);
+                        }}
+                        disabled={deleteUpload.isPending}
+                      >
+                        <XIcon />
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={() => {
+                          setUploadTrackModalOpen(true);
+                          setTrackToUpload(track);
+                        }}
+                      >
+                        <Upload />
+                      </Button>
+                    )}
 
-                        {track.audioFile && (
-                          <audio controls>
-                            <source
-                              src={`${env.API_URL}/api/files/${track.audioFile}`}
-                              type="audio/mp3"
-                            />
-                          </audio>
-                        )}
-                      </div>
-
-                      <div className="flex gap-1">
-                        <Button
-                          onClick={() => {
-                            setEditModalOpen(true);
-                            setTrackToEdit(track);
-                          }}
-                        >
-                          <Edit />
-                        </Button>
-
-                        {track.audioFile ? (
-                          <Button
-                            onClick={() => {
-                              setDeleteUploadId(track.id);
-                              setConfirmDeleteUploadModalOpen(true);
-                            }}
-                            disabled={deleteUpload.isPending}
-                          >
-                            <XIcon />
-                          </Button>
-                        ) : (
-                          <Button
-                            onClick={() => {
-                              setUploadTrackModalOpen(true);
-                              setTrackToUpload(track);
-                            }}
-                          >
-                            <Upload />
-                          </Button>
-                        )}
-
-                        <Button
-                          onClick={() => {
-                            setDeleteTrackId(track.id);
-                            setConfirmDeleteTrackModalOpen(true);
-                          }}
-                          disabled={deleteMutation.isPending}
-                        >
-                          <Trash />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                    <Button
+                      onClick={() => {
+                        setDeleteTrackId(track.id);
+                        setConfirmDeleteTrackModalOpen(true);
+                      }}
+                      disabled={deleteMutation.isPending}
+                    >
+                      <Trash />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
         </div>
 
-        <div className="py-3">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious href="#" />
-              </PaginationItem>
-
-              {Array.from({ length: curPage - 1 }, (_, i) => i + 1).map((p) => (
-                <PaginationItem key={p} onClick={() => setCurPage(p)}>
-                  <PaginationLink href={`?p=${p}#tracks-list`}>{p}</PaginationLink>
-                </PaginationItem>
-              ))}
-
-              <PaginationItem>
-                <PaginationLink href="#" isActive>
-                  {curPage}
-                </PaginationLink>
-              </PaginationItem>
-
-              {Array.from(
-                { length: (data?.meta.totalPages ?? 0) - curPage },
-                (_, i) => curPage + 1 + i,
-              ).map((p) => (
-                <PaginationItem key={p} onClick={() => setCurPage(p)}>
-                  <PaginationLink href={`?p=${p}#tracks-list`}>{p}</PaginationLink>
-                </PaginationItem>
-              ))}
-
-              <PaginationItem>
-                <PaginationEllipsis />
-              </PaginationItem>
-
-              <PaginationItem>
-                <PaginationNext href="#" />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
+        {!isLoading && (
+          <div className="py-3">
+            <PagePagination
+              curPage={curPage}
+              totalPages={data?.meta.totalPages ?? 0}
+              onPageChange={setCurPage}
+            />
+          </div>
+        )}
       </main>
     </>
   );

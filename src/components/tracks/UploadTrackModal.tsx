@@ -1,11 +1,15 @@
 import { Track, useUploadTrackMutation } from '@/services/tracks';
 import { useForm } from '@tanstack/react-form';
-import { FC } from 'react';
+import { FC, useRef } from 'react';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
-import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { XIcon } from 'lucide-react';
 import { z } from 'zod';
+import { Card, CardContent } from '../ui/card';
+
+const AUDIOFILE_TYPES = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/x-wav'];
+
+const fileInputAcceptAttr = AUDIOFILE_TYPES.join(', ');
 
 type Values = {
   file: File | null;
@@ -16,7 +20,11 @@ const defaultValues: Values = {
 };
 
 const uploadTrackSchema = z.object({
-  file: z.instanceof(File, { message: 'required' }),
+  file: z
+    .instanceof(File, { message: 'required' })
+    .refine((v) => AUDIOFILE_TYPES.includes(v.type), 'acceptable files: .mp3, .wav')
+    .refine((v) => v.size > 0, 'empty file')
+    .refine((v) => v.size < 50_000 * 1024, 'file too large'),
 });
 
 export const UploadTrackModal: FC<{
@@ -25,6 +33,8 @@ export const UploadTrackModal: FC<{
   onOpenChange: (isOpen: boolean) => void;
   onUploadSuccessful?: () => void;
 }> = ({ track, isOpen, onOpenChange, onUploadSuccessful }) => {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
   const uploadTrackMutation = useUploadTrackMutation();
 
   const form = useForm({
@@ -57,20 +67,45 @@ export const UploadTrackModal: FC<{
           name="file"
           children={(field) => (
             <div>
-              <div className="flex gap-2">
-                <Input
-                  className="grow"
-                  type="file"
-                  onChange={(e) => field.handleChange(e.target.files?.[0] ?? null)}
-                />
-                {field.state.value && (
-                  <Button onClick={() => field.handleChange(null)}>
-                    <XIcon />
-                  </Button>
-                )}
-              </div>
-              {/* {field.state.meta.errors && <em>{field.state.meta.errors.map((v) => v)}</em>} */}
-              <pre>{JSON.stringify(field.state.meta.errors, null, 2)}</pre>
+              <input
+                ref={inputRef}
+                className="hidden"
+                type="file"
+                onChange={(e) => field.handleChange(e.target.files?.[0] ?? null)}
+                accept={fileInputAcceptAttr}
+              />
+
+              {field.state.value ? (
+                <Card className="py-3">
+                  <CardContent className="px-3">
+                    <div className="flex items-center justify-between gap-4">
+                      <span>{field.state.value.name}</span>
+
+                      <Button
+                        onClick={() => field.handleChange(null)}
+                        disabled={uploadTrackMutation.isPending}
+                      >
+                        <XIcon />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Button
+                  onClick={() => {
+                    inputRef.current?.click();
+                  }}
+                  disabled={uploadTrackMutation.isPending}
+                >
+                  Select file
+                </Button>
+              )}
+
+              {field.state.meta.errors && (
+                <div className="pt-3">
+                  <em>{field.state.meta.errors.map((err) => err?.message).join(', ')}</em>
+                </div>
+              )}
             </div>
           )}
         />
@@ -80,6 +115,7 @@ export const UploadTrackModal: FC<{
             onClick={() => {
               form.handleSubmit();
             }}
+            disabled={uploadTrackMutation.isPending}
           >
             Save
           </Button>
