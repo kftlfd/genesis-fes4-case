@@ -13,7 +13,7 @@ import {
   useGetTracksListQuery,
 } from '@/services/tracks';
 import { Edit, PlusIcon, Trash, Upload, XIcon } from 'lucide-react';
-import { FC, useState } from 'react';
+import { FC, useRef, useState } from 'react';
 import { Card, CardContent } from '../ui/card';
 import { EditTrackModal } from './EditTrackModal';
 import { Badge } from '../ui/badge';
@@ -81,6 +81,8 @@ export const TracksListPage: FC = () => {
 
   const [confirmDeleteUploadModalOpen, setConfirmDeleteUploadModalOpen] = useState(false);
   const [deleteUploadId, setDeleteUploadId] = useState<string | null>(null);
+
+  const nowPlaying = useRef<HTMLAudioElement | null>(null);
 
   return (
     <>
@@ -337,7 +339,13 @@ export const TracksListPage: FC = () => {
                     )}
 
                     {track.audioFile && (
-                      <audio controls>
+                      <audio
+                        controls
+                        onPlay={(e) => {
+                          if (e.currentTarget !== nowPlaying.current) nowPlaying.current?.pause();
+                          nowPlaying.current = e.currentTarget;
+                        }}
+                      >
                         <source
                           src={`${env.API_URL}/api/files/${track.audioFile}`}
                           type="audio/mp3"
