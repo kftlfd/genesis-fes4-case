@@ -12,13 +12,19 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import { Track, useDeleteTracksMutation, useGetTracksListQuery } from '@/services/tracks';
-import { Edit, PlusIcon, Trash } from 'lucide-react';
+import {
+  Track,
+  useDeleteTracksMutation,
+  useDeleteTrackUploadMutation,
+  useGetTracksListQuery,
+} from '@/services/tracks';
+import { Edit, PlusIcon, Trash, Upload, XIcon } from 'lucide-react';
 import { FC, useState } from 'react';
 import { Card, CardContent } from '../ui/card';
 import { EditTrackModal } from './EditTrackModal';
 import { Badge } from '../ui/badge';
 import { env } from '@/core/env';
+import { UploadTrackModal } from './UploadTrackModal';
 
 export const TracksListPage: FC = () => {
   const [curPage, setCurPage] = useState(1);
@@ -30,6 +36,11 @@ export const TracksListPage: FC = () => {
 
   const [trackToEdit, setTrackToEdit] = useState<Track | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
+
+  const [trackToUpload, setTrackToUpload] = useState<Track | null>(null);
+  const [uploadTrackModalOpen, setUploadTrackModalOpen] = useState(false);
+
+  const deleteUpload = useDeleteTrackUploadMutation();
 
   return (
     <>
@@ -65,6 +76,20 @@ export const TracksListPage: FC = () => {
               refetch();
               await new Promise((res) => setTimeout(res, 1000));
               setEditModalOpen(false);
+            }}
+          />
+        )}
+
+        {trackToUpload && (
+          <UploadTrackModal
+            key={trackToUpload.id}
+            track={trackToUpload}
+            isOpen={uploadTrackModalOpen}
+            onOpenChange={setUploadTrackModalOpen}
+            onUploadSuccessful={async () => {
+              refetch();
+              await new Promise((res) => setTimeout(res, 300));
+              setUploadTrackModalOpen(false);
             }}
           />
         )}
@@ -161,6 +186,25 @@ export const TracksListPage: FC = () => {
                         >
                           <Edit />
                         </Button>
+
+                        {track.audioFile ? (
+                          <Button
+                            onClick={() => {
+                              deleteUpload.mutate(track.id, { onSuccess: () => refetch() });
+                            }}
+                          >
+                            <XIcon />
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={() => {
+                              setUploadTrackModalOpen(true);
+                              setTrackToUpload(track);
+                            }}
+                          >
+                            <Upload />
+                          </Button>
+                        )}
 
                         <Button
                           onClick={() =>

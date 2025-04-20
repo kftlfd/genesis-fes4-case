@@ -180,7 +180,36 @@ const deleteTracksRequest = (ids: string[]) => {
     : deleteSingleTrackRequest(idsToDelete[0]);
 };
 
-export const useDeleteTracksMutation = () =>
-  useMutation({
-    mutationFn: deleteTracksRequest,
+export const useDeleteTracksMutation = () => useMutation({ mutationFn: deleteTracksRequest });
+
+const uploadTrackRequest = async (arg: { trackId: string; file: File }) => {
+  const data = new FormData();
+  data.append('file', arg.file, arg.file.name);
+
+  const response = await fetch(`${env.API_URL}/api/tracks/${arg.trackId}/upload`, {
+    method: 'POST',
+    body: data,
+    // headers: {
+    //   'content-type': 'audio/mp3', // arg.file.type,
+    //   'content-length': `${arg.file.size}`,
+    // },
   });
+  if (!response.ok) {
+    throw new Error('upload failed');
+  }
+  return response;
+};
+
+export const useUploadTrackMutation = () => useMutation({ mutationFn: uploadTrackRequest });
+
+const deleteTrackUploadRequest = async (trackId: string) => {
+  const response = await fetch(`${env.API_URL}/api/tracks/${trackId}/file`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) {
+    throw new Error('request failed');
+  }
+};
+
+export const useDeleteTrackUploadMutation = () =>
+  useMutation({ mutationFn: deleteTrackUploadRequest });
