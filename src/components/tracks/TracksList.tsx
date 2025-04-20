@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 
 import {
+  GetTracksListParams,
   Track,
   useDeleteTracksMutation,
   useDeleteTrackUploadMutation,
+  useGetGenresListQuery,
   useGetTracksListQuery,
 } from '@/services/tracks';
 import { Edit, PlusIcon, Trash, Upload, XIcon } from 'lucide-react';
@@ -21,6 +23,7 @@ import { ConfirmModal } from './ConfirmModal';
 import { LoadingSpinner } from '../ui/loading';
 // import { useSearchParams } from 'next/navigation';
 import { PagePagination } from './Pagination';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 // const parseCurPage = (val: string | null) => {
 //   const p = Number(val);
@@ -40,8 +43,22 @@ export const TracksListPage: FC = () => {
 
   // console.log({ p: searchParams.get('p') });
 
+  const [curSort, setCurSort] = useState<GetTracksListParams['sort']>();
+  const [curOrder, setCurOrder] = useState<GetTracksListParams['order']>();
+
+  const [genreFilter, setGenreFilter] = useState<string>();
+
+  const { data, isLoading, isError, refetch } = useGetTracksListQuery({
+    page: curPage,
+    limit: 4,
+    sort: curSort,
+    order: curOrder,
+    genre: genreFilter,
+  });
+
+  const genresQuery = useGetGenresListQuery();
+
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const { data, isLoading, isError, refetch } = useGetTracksListQuery({ page: curPage });
   const deleteMutation = useDeleteTracksMutation();
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -147,7 +164,75 @@ export const TracksListPage: FC = () => {
         )}
       </header>
 
-      <div className="container mx-auto py-4">
+      <div className="container mx-auto flex gap-3 py-4">
+        <div className="flex items-center gap-1 rounded-sm border p-1">
+          <span>Sort by</span>
+          <Select
+            value={curSort ?? 'none'}
+            onValueChange={(v) =>
+              setCurSort(v === 'none' ? undefined : (v as GetTracksListParams['sort']))
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              {(
+                ['artist', 'album', 'title', 'createdAt'] satisfies GetTracksListParams['sort'][]
+              ).map((val) => (
+                <SelectItem key={val} value={val}>
+                  {val}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-1 rounded-sm border p-1">
+          <span>Genre</span>
+          <Select
+            value={genreFilter ?? 'none'}
+            onValueChange={(v) => setGenreFilter(v === 'none' ? undefined : v)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Any" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Any</SelectItem>
+              {(genresQuery.data ?? []).map((val) => (
+                <SelectItem key={val} value={val}>
+                  {val}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-1 rounded-sm border p-1">
+          <span>Order</span>
+          <Select
+            value={curOrder ?? 'none'}
+            onValueChange={(v) =>
+              setCurOrder(v === 'none' ? undefined : (v as GetTracksListParams['order']))
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Any" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Any</SelectItem>
+              {(['asc', 'desc'] satisfies GetTracksListParams['order'][]).map((val) => (
+                <SelectItem key={val} value={val}>
+                  {val}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="container mx-auto flex gap-3 py-4">
         <div className="flex gap-2">
           <span>Selected: {selectedIds.length}</span>
         </div>

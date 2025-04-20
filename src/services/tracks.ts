@@ -2,6 +2,17 @@ import { env } from '@/core/env';
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 
+const getGenresRequest = async () => {
+  const response = await fetch(`${env.API_URL}/api/genres`);
+  if (!response.ok) {
+    throw new Error('request failed');
+  }
+  return (await response.json()) as string[];
+};
+
+export const useGetGenresListQuery = () =>
+  useQuery({ queryKey: ['genres'], queryFn: getGenresRequest });
+
 const trackSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -27,7 +38,7 @@ const tracksListSchema = z.object({
   }),
 });
 
-type GetTracksListParams = {
+export type GetTracksListParams = {
   page?: number;
   limit?: number;
   sort?: 'title' | 'artist' | 'album' | 'createdAt';
@@ -54,7 +65,18 @@ const getTracksListSearchParamsSchema = z.object({
 });
 
 const getTracksListRequest = async (params?: GetTracksListParams) => {
-  const searchParams = new URLSearchParams(getTracksListSearchParamsSchema.parse(params));
+  const searchParams = new URLSearchParams(
+    Object.entries(getTracksListSearchParamsSchema.parse(params)).reduce(
+      (acc: [string, string][], [key, val]) => {
+        if (val) {
+          acc.push([key, val]);
+        }
+        return acc;
+      },
+      [],
+    ),
+  );
+
   const response = await fetch(`${env.API_URL}/api/tracks?${searchParams.toString()}`);
   try {
     return tracksListSchema.parse(await response.json());
