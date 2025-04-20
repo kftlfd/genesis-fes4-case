@@ -18,6 +18,7 @@ import { FC, useState } from 'react';
 import { Card, CardContent } from '../ui/card';
 import { EditTrackModal } from './EditTrackModal';
 import { Badge } from '../ui/badge';
+import { env } from '@/core/env';
 
 export const TracksListPage: FC = () => {
   const [curPage, setCurPage] = useState(1);
@@ -132,12 +133,22 @@ export const TracksListPage: FC = () => {
                           {track.artist} - {track.title}
                         </div>
                         <div>{track.album}</div>
+
                         {track.genres.length > 0 && (
                           <div className="flex gap-1 pt-2">
                             {track.genres.map((g) => (
                               <Badge key={g}>{g}</Badge>
                             ))}
                           </div>
+                        )}
+
+                        {track.audioFile && (
+                          <audio controls>
+                            <source
+                              src={`${env.API_URL}/api/files/${track.audioFile}`}
+                              type="audio/mp3"
+                            />
+                          </audio>
                         )}
                       </div>
 
