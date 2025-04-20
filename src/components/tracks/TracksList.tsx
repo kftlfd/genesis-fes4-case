@@ -25,6 +25,7 @@ import { EditTrackModal } from './EditTrackModal';
 import { Badge } from '../ui/badge';
 import { env } from '@/core/env';
 import { UploadTrackModal } from './UploadTrackModal';
+import { ConfirmModal } from './ConfirmModal';
 
 export const TracksListPage: FC = () => {
   const [curPage, setCurPage] = useState(1);
@@ -41,6 +42,12 @@ export const TracksListPage: FC = () => {
   const [uploadTrackModalOpen, setUploadTrackModalOpen] = useState(false);
 
   const deleteUpload = useDeleteTrackUploadMutation();
+
+  const [confirmDeleteTrackModalOpen, setConfirmDeleteTrackModalOpen] = useState(false);
+  const [deleteTrackId, setDeleteTrackId] = useState<string | null>(null);
+
+  const [confirmDeleteUploadModalOpen, setConfirmDeleteUploadModalOpen] = useState(false);
+  const [deleteUploadId, setDeleteUploadId] = useState<string | null>(null);
 
   return (
     <>
@@ -91,6 +98,40 @@ export const TracksListPage: FC = () => {
               await new Promise((res) => setTimeout(res, 300));
               setUploadTrackModalOpen(false);
             }}
+          />
+        )}
+
+        {deleteTrackId && (
+          <ConfirmModal
+            title="Delete track?"
+            isOpen={confirmDeleteTrackModalOpen}
+            onOpenChange={setConfirmDeleteTrackModalOpen}
+            onConfirm={() => {
+              deleteMutation.mutate([deleteTrackId], {
+                onSuccess: () => {
+                  refetch();
+                  setConfirmDeleteTrackModalOpen(false);
+                },
+              });
+            }}
+            actionDisabled={deleteMutation.isPending}
+          />
+        )}
+
+        {deleteUploadId && (
+          <ConfirmModal
+            title="Delete track audio file?"
+            isOpen={confirmDeleteUploadModalOpen}
+            onOpenChange={setConfirmDeleteUploadModalOpen}
+            onConfirm={() => {
+              deleteUpload.mutate(deleteUploadId, {
+                onSuccess: () => {
+                  refetch();
+                  setConfirmDeleteUploadModalOpen(false);
+                },
+              });
+            }}
+            actionDisabled={deleteUpload.isPending}
           />
         )}
       </header>
@@ -190,8 +231,10 @@ export const TracksListPage: FC = () => {
                         {track.audioFile ? (
                           <Button
                             onClick={() => {
-                              deleteUpload.mutate(track.id, { onSuccess: () => refetch() });
+                              setDeleteUploadId(track.id);
+                              setConfirmDeleteUploadModalOpen(true);
                             }}
+                            disabled={deleteUpload.isPending}
                           >
                             <XIcon />
                           </Button>
@@ -207,9 +250,10 @@ export const TracksListPage: FC = () => {
                         )}
 
                         <Button
-                          onClick={() =>
-                            deleteMutation.mutate([track.id], { onSuccess: () => refetch() })
-                          }
+                          onClick={() => {
+                            setDeleteTrackId(track.id);
+                            setConfirmDeleteTrackModalOpen(true);
+                          }}
                           disabled={deleteMutation.isPending}
                         >
                           <Trash />
