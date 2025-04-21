@@ -22,7 +22,7 @@ API documentation will be available at http://localhost:8000/documentation).
 
     - [x] Open the modal.
     - [x] Create a form to input track metadata (e.g., title, artist, album, genres).
-    - [ ] A track can have multiple genres (the list is provided by the API). Show genres as tags with an x to remove and a + to add a new one.
+    - [x] A track can have multiple genres (the list is provided by the API). Show genres as tags with an x to remove and a + to add a new one.
     - [ ] Implement client-side validation for required fields (e.g., track title, artist name).
     - [ ] The form should save the metadata without requiring an actual file upload.
     - [ ] Add a field for a cover image link:
