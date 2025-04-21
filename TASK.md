@@ -23,43 +23,43 @@ API documentation will be available at http://localhost:8000/documentation).
     - [x] Open the modal.
     - [x] Create a form to input track metadata (e.g., title, artist, album, genres).
     - [x] A track can have multiple genres (the list is provided by the API). Show genres as tags with an x to remove and a + to add a new one.
-    - [ ] Implement client-side validation for required fields (e.g., track title, artist name).
-    - [ ] The form should save the metadata without requiring an actual file upload.
-    - [ ] Add a field for a cover image link:
-      - [ ] Validate the image link format.
-      - [ ] Display a default image for tracks without a cover.
-    - [ ] Audio file upload should be available as separate flow (Task 3).
+    - [x] Implement client-side validation for required fields (e.g., track title, artist name).
+    - [x] The form should save the metadata without requiring an actual file upload.
+    - [x] Add a field for a cover image link:
+      - [x] Validate the image link format.
+      - [x] Display a default image for tracks without a cover.
+    - [x] Audio file upload should be available as separate flow (Task 3).
 
 2.  Edit Track Metadata:
 
-    - [ ] Open Edit Track modal .
-    - [ ] Create a form to edit the metadata of an existing track (e.g., change the title, artist, or genre).
-    - [ ] Pre-fill the form with the current metadata of the track when editing.
-    - [ ] Save modifications to the API.
-    - [ ] Reflect changes immediately in the list view.
+    - [x] Open Edit Track modal .
+    - [x] Create a form to edit the metadata of an existing track (e.g., change the title, artist, or genre).
+    - [x] Pre-fill the form with the current metadata of the track when editing.
+    - [x] Save modifications to the API.
+    - [x] Reflect changes immediately in the list view.
 
 3.  Upload a Track (file):
 
-    - [ ] Add functionality to upload a music file (MP3, WAV, etc.) to an existing track (separately from creating and edition).
-    - [ ] Validate the file type and size to ensure the upload is valid.
-    - [ ] Add the ability to remove an uploaded file (e.g., to replace it with a higher-quality version).
-    - [ ] Once uploaded, the file should be playable using the standard HTML audio element.
+    - [x] Add functionality to upload a music file (MP3, WAV, etc.) to an existing track (separately from creating and edition).
+    - [x] Validate the file type and size to ensure the upload is valid.
+    - [x] Add the ability to remove an uploaded file (e.g., to replace it with a higher-quality version).
+    - [x] Once uploaded, the file should be playable using the standard HTML audio element.
 
 4.  Delete a Track:
 
-    - [ ] Implement a feature to delete a track.
-    - [ ] Ensure the track is removed both from the list view and from the backend.
+    - [x] Implement a feature to delete a track.
+    - [x] Ensure the track is removed both from the list view and from the backend.
 
 5.  List View with Pagination, Sorting, and Filtering:
-    - [ ] Display all tracks in a list view (with pagination for large data sets).
-    - [ ] Implement sorting by metadata fields (e.g., sort by track title, artist, or genre).
-    - [ ] Provide filtering options (e.g., filter by artist or genre).
-    - [ ] Implement a track search feature with debounce (search by title, artist, and album).
-    - [ ] Tracks with uploaded files should be playable inline (one at a time).
+    - [x] Display all tracks in a list view (with pagination for large data sets).
+    - [x] Implement sorting by metadata fields (e.g., sort by track title, artist, or genre).
+    - [x] Provide filtering options (e.g., filter by artist or genre).
+    - [x] Implement a track search feature with debounce (search by title, artist, and album).
+    - [x] Tracks with uploaded files should be playable inline (one at a time).
 
 ## Extra Tasks (optional)
 
-- [ ] Implement bulk delete functionality (select multiple or all tracks and delete them).
+- [x] Implement bulk delete functionality (select multiple or all tracks and delete them).
 - [ ] Implement optimistic updates to reflect changes in the UI before they are confirmed by the server.
 - [ ] Add visualization for the audiowave of currently played track.
 

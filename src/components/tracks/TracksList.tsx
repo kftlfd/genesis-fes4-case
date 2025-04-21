@@ -3,7 +3,6 @@
 import { CreateTrackModal } from '@/components/tracks/CreateTrackModal';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-
 import {
   GetTracksListParams,
   Track,
@@ -27,6 +26,8 @@ import { useDebouncedValue } from '@/hooks/use-debouce';
 import { Input } from '../ui/input';
 import { useGetGenresListQuery } from '@/services/genres';
 
+const FILTER_NONE = '__none__';
+
 // const parseCurPage = (val: string | null) => {
 //   const p = Number(val);
 //   return Number.isFinite(p) && p > 0 ? p : 1;
@@ -42,7 +43,7 @@ export const TracksListPage: FC = () => {
   });
   // const curPage = parseCurPage(searchParams.get('p'));
   // console.log({ p: searchParams.get('p') });
-  const [curPageSize] = useState(4);
+  const [curPageSize, setCurPageSize] = useState(4);
 
   const [curSort, setCurSort] = useState<GetTracksListParams['sort']>();
   const [curOrder, setCurOrder] = useState<GetTracksListParams['order']>();
@@ -85,8 +86,8 @@ export const TracksListPage: FC = () => {
   const nowPlaying = useRef<HTMLAudioElement | null>(null);
 
   return (
-    <>
-      <header className="container mx-auto flex items-center justify-between py-4">
+    <div className="container mx-auto px-4">
+      <header className="flex items-center justify-between py-4">
         <h1 className="text-3xl">Tracks</h1>
 
         <div>
@@ -171,20 +172,20 @@ export const TracksListPage: FC = () => {
         )}
       </header>
 
-      <div className="container mx-auto flex gap-3 py-4">
-        <div className="flex items-center gap-1 rounded-sm border p-1">
+      <div className="flex flex-wrap gap-3 py-4">
+        <div className="flex min-w-25 grow items-center gap-1 rounded-sm border p-1">
           <span>Sort by</span>
           <Select
-            value={curSort ?? 'none'}
+            value={curSort ?? FILTER_NONE}
             onValueChange={(v) =>
-              setCurSort(v === 'none' ? undefined : (v as GetTracksListParams['sort']))
+              setCurSort(v === FILTER_NONE ? undefined : (v as GetTracksListParams['sort']))
             }
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Sort by" />
+            <SelectTrigger className="grow">
+              <SelectValue placeholder="None" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">None</SelectItem>
+              <SelectItem value={FILTER_NONE}>None</SelectItem>
               {(
                 ['artist', 'album', 'title', 'createdAt'] satisfies GetTracksListParams['sort'][]
               ).map((val) => (
@@ -196,17 +197,17 @@ export const TracksListPage: FC = () => {
           </Select>
         </div>
 
-        <div className="flex items-center gap-1 rounded-sm border p-1">
+        <div className="flex min-w-25 grow items-center gap-1 rounded-sm border p-1">
           <span>Genre</span>
           <Select
-            value={genreFilter ?? 'none'}
-            onValueChange={(v) => setGenreFilter(v === 'none' ? undefined : v)}
+            value={genreFilter ?? FILTER_NONE}
+            onValueChange={(v) => setGenreFilter(v === FILTER_NONE ? undefined : v)}
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Any" />
+            <SelectTrigger className="grow">
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Any</SelectItem>
+              <SelectItem value={FILTER_NONE}>Any</SelectItem>
               {(genresQuery.data ?? []).map((val) => (
                 <SelectItem key={val} value={val}>
                   {val}
@@ -216,19 +217,19 @@ export const TracksListPage: FC = () => {
           </Select>
         </div>
 
-        <div className="flex items-center gap-1 rounded-sm border p-1">
+        <div className="flex min-w-25 grow items-center gap-1 rounded-sm border p-1">
           <span>Order</span>
           <Select
-            value={curOrder ?? 'none'}
+            value={curOrder ?? FILTER_NONE}
             onValueChange={(v) =>
-              setCurOrder(v === 'none' ? undefined : (v as GetTracksListParams['order']))
+              setCurOrder(v === FILTER_NONE ? undefined : (v as GetTracksListParams['order']))
             }
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Any" />
+            <SelectTrigger className="grow">
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Any</SelectItem>
+              <SelectItem value={FILTER_NONE}>Any</SelectItem>
               {(['asc', 'desc'] satisfies GetTracksListParams['order'][]).map((val) => (
                 <SelectItem key={val} value={val}>
                   {val}
@@ -238,9 +239,26 @@ export const TracksListPage: FC = () => {
           </Select>
         </div>
 
-        <div className="flex items-center gap-1 rounded-sm border p-1">
+        <div className="flex min-w-25 grow items-center gap-1 rounded-sm border p-1">
+          <span>On Page</span>
+          <Select value={curPageSize.toString()} onValueChange={(v) => setCurPageSize(Number(v))}>
+            <SelectTrigger className="grow">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[4, 10, 20].map((val) => (
+                <SelectItem key={val} value={val.toString()}>
+                  {val}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex min-w-35 grow items-center gap-1 rounded-sm border p-1">
           <span>Artist</span>
           <Input
+            className="grow"
             type="text"
             value={artistFilter ?? ''}
             onChange={(e) => {
@@ -250,9 +268,10 @@ export const TracksListPage: FC = () => {
           />
         </div>
 
-        <div className="flex items-center gap-1 rounded-sm border p-1">
+        <div className="flex min-w-35 grow items-center gap-1 rounded-sm border p-1">
           <span>Search</span>
           <Input
+            className="grow"
             type="text"
             value={searchFilter ?? ''}
             onChange={(e) => {
@@ -263,7 +282,7 @@ export const TracksListPage: FC = () => {
         </div>
       </div>
 
-      <div className="container mx-auto flex gap-3 py-4">
+      <div className="flex flex-wrap gap-3 py-4">
         <div className="flex gap-2">
           <span>Selected: {selectedIds.length}</span>
         </div>
@@ -290,7 +309,7 @@ export const TracksListPage: FC = () => {
         </Button>
       </div>
 
-      <main className="container mx-auto">
+      <main>
         <div id="tracks-list" className="flex flex-col gap-4">
           {isLoading ? (
             <div className="flex justify-center py-6">
@@ -314,13 +333,13 @@ export const TracksListPage: FC = () => {
                     }}
                   />
 
-                  <picture>
+                  <picture className="relative h-20 w-20">
                     <source srcSet={track.coverImage} />
+                    <source srcSet="/track-cover-placeholder.webp" />
                     <img
-                      className="block h-20 w-20 object-cover object-center"
+                      className="absolute inset-0 block h-full w-full object-cover object-center"
                       alt={`${track.artist} - ${track.title}`}
                       title={`${track.artist} - ${track.title}`}
-                      src="https://picsum.photos/seed/Johnny%20B.%20Goode/300/300"
                     />
                   </picture>
 
@@ -414,6 +433,6 @@ export const TracksListPage: FC = () => {
           </div>
         )}
       </main>
-    </>
+    </div>
   );
 };
