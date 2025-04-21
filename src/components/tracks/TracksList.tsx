@@ -19,50 +19,21 @@ import { env } from '@/core/env';
 import { UploadTrackModal } from './UploadTrackModal';
 import { ConfirmModal } from './ConfirmModal';
 import { LoadingSpinner } from '../ui/loading';
-// import { useSearchParams } from 'next/navigation';
 import { PagePagination } from './Pagination';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useDebouncedValue } from '@/hooks/use-debouce';
-import { Input } from '../ui/input';
-import { useGetGenresListQuery } from '@/services/genres';
-
-const FILTER_NONE = '__none__';
-
-// const parseCurPage = (val: string | null) => {
-//   const p = Number(val);
-//   return Number.isFinite(p) && p > 0 ? p : 1;
-// };
+import { TracksFilters } from './TracksFilters';
 
 export const TracksListPage: FC = () => {
-  // const searchParams = useSearchParams();
-
-  const [curPage, setCurPage] = useState(() => {
-    return 1;
-    // const p = Number(searchParams.get('p'));
-    // return Number.isFinite(p) && p > 0 ? p : 1;
+  const [filters, setFilters] = useState<GetTracksListParams>({
+    page: 1,
+    limit: 4,
   });
-  // const curPage = parseCurPage(searchParams.get('p'));
-  // console.log({ p: searchParams.get('p') });
-  const [curPageSize, setCurPageSize] = useState(4);
-
-  const [curSort, setCurSort] = useState<GetTracksListParams['sort']>();
-  const [curOrder, setCurOrder] = useState<GetTracksListParams['order']>();
-
-  const [genreFilter, setGenreFilter] = useState<string>();
-  const [artistFilter, setArtistFilter] = useState<string>();
-  const [searchFilter, setSearchFilter] = useState<string>();
 
   const { data, isLoading, isError, refetch } = useGetTracksListQuery({
-    page: curPage,
-    limit: curPageSize,
-    sort: curSort,
-    order: curOrder,
-    genre: genreFilter,
-    artist: useDebouncedValue(artistFilter, 300)[0],
-    search: useDebouncedValue(searchFilter, 300)[0],
+    ...filters,
+    artist: useDebouncedValue(filters.artist, 300)[0],
+    search: useDebouncedValue(filters.search, 300)[0],
   });
-
-  const genresQuery = useGetGenresListQuery();
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const deleteMutation = useDeleteTracksMutation();
@@ -172,115 +143,11 @@ export const TracksListPage: FC = () => {
         )}
       </header>
 
-      <div className="flex flex-wrap gap-3 py-4">
-        <div className="flex min-w-25 grow items-center gap-1 rounded-sm border p-1">
-          <span>Sort by</span>
-          <Select
-            value={curSort ?? FILTER_NONE}
-            onValueChange={(v) =>
-              setCurSort(v === FILTER_NONE ? undefined : (v as GetTracksListParams['sort']))
-            }
-          >
-            <SelectTrigger className="grow">
-              <SelectValue placeholder="None" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={FILTER_NONE}>None</SelectItem>
-              {(
-                ['artist', 'album', 'title', 'createdAt'] satisfies GetTracksListParams['sort'][]
-              ).map((val) => (
-                <SelectItem key={val} value={val}>
-                  {val}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex min-w-25 grow items-center gap-1 rounded-sm border p-1">
-          <span>Genre</span>
-          <Select
-            value={genreFilter ?? FILTER_NONE}
-            onValueChange={(v) => setGenreFilter(v === FILTER_NONE ? undefined : v)}
-          >
-            <SelectTrigger className="grow">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={FILTER_NONE}>Any</SelectItem>
-              {(genresQuery.data ?? []).map((val) => (
-                <SelectItem key={val} value={val}>
-                  {val}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex min-w-25 grow items-center gap-1 rounded-sm border p-1">
-          <span>Order</span>
-          <Select
-            value={curOrder ?? FILTER_NONE}
-            onValueChange={(v) =>
-              setCurOrder(v === FILTER_NONE ? undefined : (v as GetTracksListParams['order']))
-            }
-          >
-            <SelectTrigger className="grow">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={FILTER_NONE}>Any</SelectItem>
-              {(['asc', 'desc'] satisfies GetTracksListParams['order'][]).map((val) => (
-                <SelectItem key={val} value={val}>
-                  {val}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex min-w-25 grow items-center gap-1 rounded-sm border p-1">
-          <span>On Page</span>
-          <Select value={curPageSize.toString()} onValueChange={(v) => setCurPageSize(Number(v))}>
-            <SelectTrigger className="grow">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {[4, 10, 20].map((val) => (
-                <SelectItem key={val} value={val.toString()}>
-                  {val}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex min-w-35 grow items-center gap-1 rounded-sm border p-1">
-          <span>Artist</span>
-          <Input
-            className="grow"
-            type="text"
-            value={artistFilter ?? ''}
-            onChange={(e) => {
-              const v = e.target.value;
-              setArtistFilter(v === '' ? undefined : v);
-            }}
-          />
-        </div>
-
-        <div className="flex min-w-35 grow items-center gap-1 rounded-sm border p-1">
-          <span>Search</span>
-          <Input
-            className="grow"
-            type="text"
-            value={searchFilter ?? ''}
-            onChange={(e) => {
-              const v = e.target.value;
-              setSearchFilter(v === '' ? undefined : v);
-            }}
-          />
-        </div>
-      </div>
+      <TracksFilters
+        className="py-4"
+        filters={filters}
+        setFilters={(f) => setFilters((prev) => ({ ...prev, ...f }))}
+      />
 
       <div className="flex flex-wrap gap-3 py-4">
         <div className="flex gap-2">
@@ -426,9 +293,9 @@ export const TracksListPage: FC = () => {
         {!isLoading && (
           <div className="py-3">
             <PagePagination
-              curPage={curPage}
+              curPage={filters.page ?? 1}
               totalPages={data?.meta.totalPages ?? 0}
-              onPageChange={setCurPage}
+              onPageChange={(p) => setFilters((prev) => ({ ...prev, page: p }))}
             />
           </div>
         )}
