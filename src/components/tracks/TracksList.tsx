@@ -9,7 +9,6 @@ import {
   Track,
   useDeleteTracksMutation,
   useDeleteTrackUploadMutation,
-  useGetGenresListQuery,
   useGetTracksListQuery,
 } from '@/services/tracks';
 import { Edit, PlusIcon, Trash, Upload, XIcon } from 'lucide-react';
@@ -26,6 +25,7 @@ import { PagePagination } from './Pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useDebouncedValue } from '@/hooks/use-debouce';
 import { Input } from '../ui/input';
+import { useGetGenresListQuery } from '@/services/genres';
 
 // const parseCurPage = (val: string | null) => {
 //   const p = Number(val);
@@ -339,18 +339,21 @@ export const TracksListPage: FC = () => {
                     )}
 
                     {track.audioFile && (
-                      <audio
-                        controls
-                        onPlay={(e) => {
-                          if (e.currentTarget !== nowPlaying.current) nowPlaying.current?.pause();
-                          nowPlaying.current = e.currentTarget;
-                        }}
-                      >
-                        <source
-                          src={`${env.API_URL}/api/files/${track.audioFile}`}
-                          type="audio/mp3"
-                        />
-                      </audio>
+                      <div className="pt-2">
+                        <audio
+                          className="w-full"
+                          controls
+                          onPlay={(e) => {
+                            if (e.currentTarget !== nowPlaying.current) nowPlaying.current?.pause();
+                            nowPlaying.current = e.currentTarget;
+                          }}
+                        >
+                          <source
+                            src={`${env.API_URL}/api/files/${track.audioFile}`}
+                            type="audio/mp3"
+                          />
+                        </audio>
+                      </div>
                     )}
                   </div>
 
