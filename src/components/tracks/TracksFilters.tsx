@@ -2,11 +2,12 @@
 
 import { GetTracksListParams } from '@/services/tracks';
 import { ArrowUp } from 'lucide-react';
-import { FC, ReactNode } from 'react';
+import { ComponentProps, FC, ReactNode } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Input } from '../ui/input';
 import { useGetGenresListQuery } from '@/services/genres';
 import { cn } from '@/lib/utils';
+import { DataAttrsProps } from '@/lib/types';
 
 const SelectFilter: FC<{
   label: string;
@@ -14,11 +15,12 @@ const SelectFilter: FC<{
   placeholder?: string;
   options: [string, ReactNode][];
   onChange: (value: string) => void;
-}> = ({ label, value, placeholder, options, onChange }) => (
+  triggerProps?: ComponentProps<typeof SelectTrigger>;
+}> = ({ label, value, placeholder, options, onChange, triggerProps }) => (
   <div className="flex min-w-35 grow basis-0 items-center gap-1 rounded-sm border p-1">
     <span>{label}</span>
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="grow">
+      <SelectTrigger className={cn('grow', triggerProps?.className)} {...triggerProps}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
@@ -38,10 +40,17 @@ const InputFilter: FC<{
   value: string;
   placeholder?: string;
   onChange: (value: string) => void;
-}> = ({ label, value, onChange }) => (
+  inputProps?: ComponentProps<'input'> & DataAttrsProps;
+}> = ({ label, value, onChange, inputProps }) => (
   <div className="flex min-w-45 grow basis-0 items-center gap-1 rounded-sm border p-1">
     <span>{label}</span>
-    <Input className="grow" type="text" value={value} onChange={(e) => onChange(e.target.value)} />
+    <Input
+      className={cn('grow', inputProps?.className)}
+      type="text"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      {...inputProps}
+    />
   </div>
 );
 
@@ -78,6 +87,9 @@ export const TracksFilters: FC<{
         onChange={(v) =>
           updateFilter('sort', v === FILTER_NONE ? undefined : (v as GetTracksListParams['sort']))
         }
+        triggerProps={{
+          'data-testid': 'sort-select',
+        }}
       />
 
       <SelectFilter
@@ -86,6 +98,9 @@ export const TracksFilters: FC<{
         placeholder="Any"
         options={(genresQuery.data ?? []).map((v) => [v, v])}
         onChange={(v) => updateFilter('genre', v === FILTER_NONE ? undefined : v)}
+        triggerProps={{
+          'data-testid': 'filter-genre',
+        }}
       />
 
       <SelectFilter
@@ -114,12 +129,18 @@ export const TracksFilters: FC<{
         label="Artist"
         value={filters.artist ?? ''}
         onChange={(v) => updateFilter('artist', v === '' ? undefined : v)}
+        inputProps={{
+          'data-testid': 'filter-artist',
+        }}
       />
 
       <InputFilter
         label="Search"
         value={filters.search ?? ''}
         onChange={(v) => updateFilter('search', v === '' ? undefined : v)}
+        inputProps={{
+          'data-testid': 'search-input',
+        }}
       />
     </div>
   );

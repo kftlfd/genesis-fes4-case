@@ -12,7 +12,8 @@ import { cn } from '@/lib/utils';
 export const GenresInput: FC<{
   value: string[];
   onChange: (val: string[]) => void;
-}> = ({ value, onChange }) => {
+  disabled?: boolean;
+}> = ({ value, onChange, disabled }) => {
   const genresQuery = useGetGenresListQuery();
 
   const selectOptions = useMemo(() => {
@@ -44,7 +45,10 @@ export const GenresInput: FC<{
               key={genre}
               onClick={() => handleRemoveGenre(genre)}
               variant={'outline'}
-              className="cursor-pointer select-none hover:bg-neutral-100"
+              className={cn(
+                'cursor-pointer select-none hover:bg-neutral-100',
+                disabled && 'pointer-events-none cursor-default',
+              )}
             >
               {genre} <XIcon size={10} />
             </Badge>
@@ -57,7 +61,12 @@ export const GenresInput: FC<{
       ) : (
         <Select value="" onValueChange={handleAddGenre}>
           <SelectTrigger asChild>
-            <Button variant="outline" className={cn(selectOptions.length < 1 && 'hidden')}>
+            <Button
+              variant="outline"
+              className={cn(selectOptions.length < 1 && 'hidden')}
+              disabled={disabled}
+              data-testid="genre-selector"
+            >
               <PlusIcon />
             </Button>
           </SelectTrigger>

@@ -12,16 +12,25 @@ export const ConfirmModal: FC<{
 }> = ({ isOpen, onOpenChange, onConfirm, title, actionText = 'Confirm', actionDisabled }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent data-testid="confirm-dialog">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <DialogFooter>
           <div className="flex justify-end gap-4">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              data-testid="cancel-delete"
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={() => onConfirm()} disabled={actionDisabled}>
+            <Button
+              variant="destructive"
+              onClick={() => onConfirm()}
+              disabled={actionDisabled}
+              data-testid="confirm-delete"
+            >
               {actionText}
             </Button>
           </div>

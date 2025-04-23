@@ -25,8 +25,9 @@ export const EditTrackModal: FC<{
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onEditSuccessful?: (updTrack: Track) => void;
+  onSubmit?: (updTrack: TrackInputValues) => Promise<void>;
 }> = ({ track, isOpen, onOpenChange, onEditSuccessful }) => {
-  const editTrackMutation = useEditTrackMutation();
+  const editTrackMutation = useEditTrackMutation(track.id);
 
   const defaultValues: TrackInputValues = {
     artist: track.artist,
@@ -45,17 +46,30 @@ export const EditTrackModal: FC<{
       console.log('invalid', { value });
     },
     onSubmit: async ({ value, meta }) => {
-      console.log({ value, meta });
-      const updatedTrack = await editTrackMutation.mutateAsync({ ...track, ...value });
-      onEditSuccessful?.(updatedTrack);
+      // console.log({ value, meta });
+      return editTrackMutation.mutateAsync(
+        { ...track, ...value },
+        {
+          onSuccess: (result) => {
+            console.log('edit success');
+            onEditSuccessful?.(result);
+          },
+          onError: () => {
+            console.log('edit fail');
+          },
+        },
+      );
     },
   });
 
-  const onSubmit = (e?: FormEvent) => {
+  const handleSubmit = (e?: FormEvent) => {
     e?.preventDefault();
     e?.stopPropagation();
     form.handleSubmit();
   };
+
+  const isLoading = editTrackMutation.isPending;
+  console.log('modal:', { mutationPending: isLoading, form: form.state.isSubmitting });
 
   return (
     <Dialog
@@ -70,7 +84,7 @@ export const EditTrackModal: FC<{
           <DialogTitle>Edit track</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-4">
+        <form onSubmit={handleSubmit} className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-4">
           <form.Field
             name="artist"
             children={(field) => (
@@ -84,6 +98,7 @@ export const EditTrackModal: FC<{
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="Artist"
+                    disabled={isLoading}
                   />
                   {field.state.meta.errors && (
                     <em>{field.state.meta.errors.map((e) => e?.message).join(', ')}</em>
@@ -106,6 +121,7 @@ export const EditTrackModal: FC<{
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="Title"
+                    disabled={isLoading}
                   />
                   {field.state.meta.errors && (
                     <em>{field.state.meta.errors.map((e) => e?.message).join(', ')}</em>
@@ -128,6 +144,7 @@ export const EditTrackModal: FC<{
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="Album"
+                    disabled={isLoading}
                   />
                   {field.state.meta.errors && (
                     <em>{field.state.meta.errors.map((e) => e?.message).join(', ')}</em>
@@ -142,7 +159,11 @@ export const EditTrackModal: FC<{
             children={(field) => (
               <>
                 <Label>Genres</Label>
-                <GenresInput value={field.state.value} onChange={field.handleChange} />
+                <GenresInput
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                  disabled={isLoading}
+                />
               </>
             )}
           />
@@ -162,6 +183,7 @@ export const EditTrackModal: FC<{
                       field.handleChange(e.target.value === '' ? undefined : e.target.value)
                     }
                     placeholder="URL"
+                    disabled={isLoading}
                   />
                   {field.state.meta.errors && (
                     <em>{field.state.meta.errors.map((e) => e?.message).join(', ')}</em>
@@ -173,13 +195,13 @@ export const EditTrackModal: FC<{
         </form>
 
         <DialogFooter className="flex justify-end">
-          <form.Subscribe
-            children={(f) => (
-              <Button onClick={() => onSubmit()} disabled={f.isSubmitting}>
-                {f.isSubmitting ? 'Loading...' : f.isSubmitSuccessful ? 'Saved' : 'Save'}
+          <form.Subscribe>
+            {({ isSubmitting }) => (
+              <Button onClick={() => handleSubmit()} isLoading={isSubmitting}>
+                Save
               </Button>
             )}
-          />
+          </form.Subscribe>
         </DialogFooter>
       </DialogContent>
     </Dialog>

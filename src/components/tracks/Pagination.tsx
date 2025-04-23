@@ -15,10 +15,10 @@ export const PagePagination: FC<{
   onPageChange: (page: number) => void;
 }> = ({ curPage, totalPages, onPageChange }) => {
   return (
-    <Pagination>
+    <Pagination data-testid="pagination">
       <PaginationContent>
         <PaginationItem onClick={() => onPageChange(Math.max(curPage - 1, 1))}>
-          <PaginationPrevious href="#" />
+          <PaginationPrevious href="#" data-testid="pagination-prev" />
         </PaginationItem>
 
         {Array.from({ length: curPage - 1 }, (_, i) => i + 1).map((p) => (
@@ -44,7 +44,7 @@ export const PagePagination: FC<{
         </PaginationItem> */}
 
         <PaginationItem onClick={() => onPageChange(Math.min(curPage + 1, totalPages))}>
-          <PaginationNext href="#" />
+          <PaginationNext href="#" data-testid="pagination-next" />
         </PaginationItem>
       </PaginationContent>
     </Pagination>

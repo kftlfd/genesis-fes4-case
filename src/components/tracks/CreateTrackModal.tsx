@@ -64,7 +64,7 @@ export const CreateTrackModal: FC<{
         onOpenChange(open);
       }}
     >
-      <DialogContent>
+      <DialogContent data-testid="track-form">
         <DialogHeader>
           <DialogTitle>Create new track</DialogTitle>
         </DialogHeader>
@@ -83,9 +83,12 @@ export const CreateTrackModal: FC<{
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="Artist"
+                    data-testid="input-artist"
                   />
                   {field.state.meta.errors && (
-                    <em>{field.state.meta.errors.map((e) => e?.message).join(', ')}</em>
+                    <em data-testid="error-artist">
+                      {field.state.meta.errors.map((e) => e?.message).join(', ')}
+                    </em>
                   )}
                 </div>
               </>
@@ -105,9 +108,12 @@ export const CreateTrackModal: FC<{
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="Title"
+                    data-testid="input-title"
                   />
                   {field.state.meta.errors && (
-                    <em>{field.state.meta.errors.map((e) => e?.message).join(', ')}</em>
+                    <em data-testid="error-title">
+                      {field.state.meta.errors.map((e) => e?.message).join(', ')}
+                    </em>
                   )}
                 </div>
               </>
@@ -127,9 +133,12 @@ export const CreateTrackModal: FC<{
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="Album"
+                    data-testid="input-album"
                   />
                   {field.state.meta.errors && (
-                    <em>{field.state.meta.errors.map((e) => e?.message).join(', ')}</em>
+                    <em data-testid="error-album">
+                      {field.state.meta.errors.map((e) => e?.message).join(', ')}
+                    </em>
                   )}
                 </div>
               </>
@@ -141,7 +150,14 @@ export const CreateTrackModal: FC<{
             children={(field) => (
               <>
                 <Label>Genres</Label>
-                <GenresInput value={field.state.value} onChange={field.handleChange} />
+                <div>
+                  <GenresInput value={field.state.value} onChange={field.handleChange} />
+                  {field.state.meta.errors && (
+                    <em data-testid="error-genre">
+                      {field.state.meta.errors.map((e) => e?.message).join(', ')}
+                    </em>
+                  )}
+                </div>
               </>
             )}
           />
@@ -161,9 +177,12 @@ export const CreateTrackModal: FC<{
                       field.handleChange(e.target.value === '' ? undefined : e.target.value)
                     }
                     placeholder="URL"
+                    data-testid="input-cover-image"
                   />
                   {field.state.meta.errors && (
-                    <em>{field.state.meta.errors.map((e) => e?.message).join(', ')}</em>
+                    <em data-testid="error-cover-image">
+                      {field.state.meta.errors.map((e) => e?.message).join(', ')}
+                    </em>
                   )}
                 </div>
               </>
@@ -174,7 +193,11 @@ export const CreateTrackModal: FC<{
         <DialogFooter className="flex justify-end">
           <form.Subscribe
             children={(f) => (
-              <Button onClick={() => onSubmit()} disabled={f.isSubmitting}>
+              <Button
+                onClick={() => onSubmit()}
+                disabled={f.isSubmitting}
+                data-testid="submit-button"
+              >
                 {f.isSubmitting ? 'Loading...' : f.isSubmitSuccessful ? 'Created' : 'Create'}
               </Button>
             )}

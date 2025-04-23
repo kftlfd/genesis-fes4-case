@@ -22,12 +22,20 @@ import { LoadingSpinner } from '../ui/loading';
 import { PagePagination } from './Pagination';
 import { useDebouncedValue } from '@/hooks/use-debouce';
 import { TracksFilters } from './TracksFilters';
+import { Toggle } from '../ui/toggle';
+import { Collapsible, CollapsibleContent } from '../ui/collapsible';
+import { TracksSelection } from './TracksSelection';
+import { TrackCard } from './TrackCard';
 
 export const TracksListPage: FC = () => {
   const [filters, setFilters] = useState<GetTracksListParams>({
     page: 1,
     limit: 4,
   });
+
+  const handleUpdateFilters = (f: GetTracksListParams) => {
+    setFilters((prev) => ({ ...prev, ...f }));
+  };
 
   const { data, isLoading, isError, refetch } = useGetTracksListQuery({
     ...filters,
@@ -36,7 +44,6 @@ export const TracksListPage: FC = () => {
   });
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const deleteMutation = useDeleteTracksMutation();
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
@@ -46,23 +53,44 @@ export const TracksListPage: FC = () => {
   const [trackToUpload, setTrackToUpload] = useState<Track | null>(null);
   const [uploadTrackModalOpen, setUploadTrackModalOpen] = useState(false);
 
-  const deleteUpload = useDeleteTrackUploadMutation();
-
   const [confirmDeleteTrackModalOpen, setConfirmDeleteTrackModalOpen] = useState(false);
   const [deleteTrackId, setDeleteTrackId] = useState<string | null>(null);
+  const deleteMutation = useDeleteTracksMutation(deleteTrackId ?? '');
 
   const [confirmDeleteUploadModalOpen, setConfirmDeleteUploadModalOpen] = useState(false);
   const [deleteUploadId, setDeleteUploadId] = useState<string | null>(null);
+  const deleteUpload = useDeleteTrackUploadMutation(deleteUploadId ?? '');
+
+  const [isSelectModeEnabled, setIsSelectModeEnabled] = useState(false);
+
+  const handleSelectAll = () => {
+    setSelectedIds(
+      Array.from(new Set([...selectedIds, ...(data ? data.data.map((track) => track.id) : [])])),
+    );
+  };
+
+  const handleDeselctAll = () => {
+    setSelectedIds([]);
+  };
+
+  const handleDeleteSelected = () => {
+    deleteMutation.mutate(selectedIds, {
+      onSuccess: () => {
+        refetch();
+        handleDeselctAll();
+      },
+    });
+  };
 
   const nowPlaying = useRef<HTMLAudioElement | null>(null);
 
   return (
     <div className="container mx-auto px-4">
-      <header className="flex items-center justify-between py-4">
+      <header className="flex items-center justify-between py-4" data-testid="tracks-header">
         <h1 className="text-3xl">Tracks</h1>
 
         <div>
-          <Button onClick={() => setCreateModalOpen(true)}>
+          <Button onClick={() => setCreateModalOpen(true)} data-testid="create-track-button">
             <span className="flex items-center gap-1">
               <PlusIcon />
               <span>Create</span>
@@ -143,38 +171,18 @@ export const TracksListPage: FC = () => {
         )}
       </header>
 
-      <TracksFilters
+      <TracksFilters className="py-4" filters={filters} setFilters={handleUpdateFilters} />
+
+      <TracksSelection
         className="py-4"
-        filters={filters}
-        setFilters={(f) => setFilters((prev) => ({ ...prev, ...f }))}
+        isSelectModeEnabled={isSelectModeEnabled}
+        toggleSelectMode={setIsSelectModeEnabled}
+        selectedCount={selectedIds.length}
+        onSelectAll={handleSelectAll}
+        onDeselectAll={handleDeselctAll}
+        onDeleteSelected={handleDeleteSelected}
+        isDeleteSelectedDisabled={selectedIds.length < 1 || deleteMutation.isPending}
       />
-
-      <div className="flex flex-wrap gap-3 py-4">
-        <div className="flex gap-2">
-          <span>Selected: {selectedIds.length}</span>
-        </div>
-
-        <Button
-          onClick={() => {
-            setSelectedIds(
-              Array.from(
-                new Set([...selectedIds, ...(data ? data.data.map((track) => track.id) : [])]),
-              ),
-            );
-          }}
-        >
-          Select All
-        </Button>
-
-        <Button onClick={() => setSelectedIds([])}>Deselect All</Button>
-
-        <Button
-          disabled={selectedIds.length < 1}
-          onClick={() => deleteMutation.mutate(selectedIds, { onSuccess: () => refetch() })}
-        >
-          Delete Selected
-        </Button>
-      </div>
 
       <main>
         <div id="tracks-list" className="flex flex-col gap-4">
@@ -186,19 +194,43 @@ export const TracksListPage: FC = () => {
             'error'
           ) : (
             data.data.map((track) => (
-              <Card key={track.id} className="py-3">
+              <TrackCard
+                key={track.id}
+                track={track}
+                isSelectModeEnabled={isSelectModeEnabled}
+                isSelected={selectedIds.includes(track.id)}
+                onSelectChange={(checked) => {
+                  if (checked === true && !selectedIds.includes(track.id)) {
+                    setSelectedIds((prev) => [...prev, track.id]);
+                  }
+                  if (checked === false) {
+                    setSelectedIds((prev) => prev.filter((p) => p !== track.id));
+                  }
+                }}
+                onPlay={(e) => {
+                  if (e.currentTarget !== nowPlaying.current) nowPlaying.current?.pause();
+                  nowPlaying.current = e.currentTarget;
+                }}
+              />
+              /*
+              <Card key={track.id} className="py-3" data-testid={`track-item-${track.id}`}>
                 <CardContent className="flex gap-2 px-3">
-                  <Checkbox
-                    checked={selectedIds.includes(track.id)}
-                    onCheckedChange={(checked) => {
-                      if (checked === true && !selectedIds.includes(track.id)) {
-                        setSelectedIds((prev) => [...prev, track.id]);
-                      }
-                      if (checked === false) {
-                        setSelectedIds((prev) => prev.filter((p) => p !== track.id));
-                      }
-                    }}
-                  />
+                  <Collapsible open={isSelectModeEnabled}>
+                    <CollapsibleContent>
+                      <Checkbox
+                        checked={selectedIds.includes(track.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked === true && !selectedIds.includes(track.id)) {
+                            setSelectedIds((prev) => [...prev, track.id]);
+                          }
+                          if (checked === false) {
+                            setSelectedIds((prev) => prev.filter((p) => p !== track.id));
+                          }
+                        }}
+                        data-testid={`track-checkbox-${track.id}`}
+                      />
+                    </CollapsibleContent>
+                  </Collapsible>
 
                   <picture className="relative h-20 w-20">
                     <source srcSet={track.coverImage} />
@@ -212,7 +244,8 @@ export const TracksListPage: FC = () => {
 
                   <div className="grow">
                     <div>
-                      {track.artist} - {track.title}
+                      <span data-testid={`track-item-${track.id}-artist`}>{track.artist}</span>-
+                      <span data-testid={`track-item-${track.id}-title`}>{track.title}</span>
                     </div>
                     <div>{track.album}</div>
 
@@ -249,6 +282,7 @@ export const TracksListPage: FC = () => {
                         setEditModalOpen(true);
                         setTrackToEdit(track);
                       }}
+                      data-testid={`edit-track-${track.id}`}
                     >
                       <Edit />
                     </Button>
@@ -269,6 +303,7 @@ export const TracksListPage: FC = () => {
                           setUploadTrackModalOpen(true);
                           setTrackToUpload(track);
                         }}
+                        data-testid={`upload-track-${track.id}`}
                       >
                         <Upload />
                       </Button>
@@ -280,12 +315,14 @@ export const TracksListPage: FC = () => {
                         setConfirmDeleteTrackModalOpen(true);
                       }}
                       disabled={deleteMutation.isPending}
+                      data-testid={`delete-track-${track.id}`}
                     >
                       <Trash />
                     </Button>
                   </div>
                 </CardContent>
               </Card>
+              */
             ))
           )}
         </div>

@@ -79,44 +79,44 @@ API documentation will be available at http://localhost:8000/documentation).
 
     1. Required data-testid attributes:
 
-    - [ ] `data-testid="tracks-header"` - Main page heading/title
-    - [ ] `data-testid="create-track-button"` - Button to create a new track
-    - [ ] `data-testid="search-input"` - Search input field
-    - [ ] `data-testid="sort-select"` - Sorting control
-    - [ ] `data-testid="filter-genre"` - Genre filter control
-    - [ ] `data-testid="filter-artist"` - Artist filter control
-    - [ ] `data-testid="pagination" -` Pagination container (if pagination is used)
-    - [ ] `data-testid="pagination-next"` - Next page button
-    - [ ] `data-testid="pagination-prev"` - Previous page button
+    - [x] `data-testid="tracks-header"` - Main page heading/title
+    - [x] `data-testid="create-track-button"` - Button to create a new track
+    - [x] `data-testid="search-input"` - Search input field
+    - [x] `data-testid="sort-select"` - Sorting control
+    - [x] `data-testid="filter-genre"` - Genre filter control
+    - [x] `data-testid="filter-artist"` - Artist filter control
+    - [x] `data-testid="pagination" -` Pagination container (if pagination is used)
+    - [x] `data-testid="pagination-next"` - Next page button
+    - [x] `data-testid="pagination-prev"` - Previous page button
 
     2. Track list items:
 
-    - [ ] `data-testid="track-item-{id}"` - Each track item container (where {id} is the track ID)
-    - [ ] `data-testid="track-item-{id}-title"` - Track title text
-    - [ ] `data-testid="track-item-{id}-artist"` - Track artist text
-    - [ ] `data-testid="edit-track-{id}"` - Edit button for a specific track
-    - [ ] `data-testid="delete-track-{id}"` - Delete button for a specific track
-    - [ ] `data-testid="upload-track-{id}"` - Upload button for a specific track (if applicable)
+    - [x] `data-testid="track-item-{id}"` - Each track item container (where {id} is the track ID)
+    - [x] `data-testid="track-item-{id}-title"` - Track title text
+    - [x] `data-testid="track-item-{id}-artist"` - Track artist text
+    - [x] `data-testid="edit-track-{id}"` - Edit button for a specific track
+    - [x] `data-testid="delete-track-{id}"` - Delete button for a specific track
+    - [x] `data-testid="upload-track-{id}"` - Upload button for a specific track (if applicable)
 
 2.  Form Elements
 
     All form elements must have appropriate data-testid attributes:
 
-    - [ ] `data-testid="track-form"` - The form container
-    - [ ] `data-testid="input-title"` - Title input field
-    - [ ] `data-testid="input-artist"` - Artist input field
-    - [ ] `data-testid="input-album"` - Album input field
-    - [ ] `data-testid="input-cover-image"` - Cover image URL input field
-    - [ ] `data-testid="genre-selector"` - Genre selection control
-    - [ ] `data-testid="submit-button"` - Form submit button
+    - [x] `data-testid="track-form"` - The form container
+    - [x] `data-testid="input-title"` - Title input field
+    - [x] `data-testid="input-artist"` - Artist input field
+    - [x] `data-testid="input-album"` - Album input field
+    - [x] `data-testid="input-cover-image"` - Cover image URL input field
+    - [x] `data-testid="genre-selector"` - Genre selection control
+    - [x] `data-testid="submit-button"` - Form submit button
 
 3.  Validation and Errors
 
     All validation errors must be identifiable:
 
-    - [ ] `data-testid="error-title"` - Title field error message
-    - [ ] `data-testid="error-artist"` - Artist field error message
-    - [ ] `data-testid="error-genre"` - Genre field error message
+    - [x] `data-testid="error-title"` - Title field error message
+    - [x] `data-testid="error-artist"` - Artist field error message
+    - [x] `data-testid="error-genre"` - Genre field error message
 
     All other validation errors should follow the pattern `data-testid="error-{fieldname}"`
 
@@ -124,9 +124,9 @@ API documentation will be available at http://localhost:8000/documentation).
 
     Confirmation dialogs and notifications must be identifiable:
 
-    - [ ] `data-testid="confirm-dialog"` - Confirmation dialog container
-    - [ ] `data-testid="confirm-delete"` - Delete confirmation button
-    - [ ] `data-testid="cancel-delete"` - Cancel delete button
+    - [x] `data-testid="confirm-dialog"` - Confirmation dialog container
+    - [x] `data-testid="confirm-delete"` - Delete confirmation button
+    - [x] `data-testid="cancel-delete"` - Cancel delete button
     - [ ] `data-testid="toast-container"` - Toast notification container
     - [ ] `data-testid="toast-{type}"` - Specific toast message (where {type} is success, error, etc.)
 
@@ -154,10 +154,10 @@ API documentation will be available at http://localhost:8000/documentation).
 
     Bulk operation controls should be identifiable:
 
-    - [ ] `data-testid="select-mode-toggle"` - Toggle for selection mode
-    - [ ] `data-testid="select-all"` - Select all checkbox
-    - [ ] `data-testid="track-checkbox-{id}"` - Checkbox for individual track
-    - [ ] `data-testid="bulk-delete-button"` - Button to delete selected tracks
+    - [x] `data-testid="select-mode-toggle"` - Toggle for selection mode
+    - [x] `data-testid="select-all"` - Select all checkbox
+    - [x] `data-testid="track-checkbox-{id}"` - Checkbox for individual track
+    - [x] `data-testid="bulk-delete-button"` - Button to delete selected tracks
 
 # Submission
 

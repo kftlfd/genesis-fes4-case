@@ -2,6 +2,8 @@ import { env } from '@/core/env';
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 
+const sleep = (time: number) => new Promise((res) => setTimeout(res, time));
+
 const trackSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -127,6 +129,7 @@ const editTrackRequest = async (track: Track) => {
         'Content-Type': 'application/json',
       },
     });
+    await sleep(5_000);
     return trackSchema.parse(await response.json());
   } catch (err) {
     console.error(err);
@@ -134,8 +137,9 @@ const editTrackRequest = async (track: Track) => {
   }
 };
 
-export const useEditTrackMutation = () =>
+export const useEditTrackMutation = (trackId: string) =>
   useMutation({
+    mutationKey: ['edit-track', trackId],
     mutationFn: editTrackRequest,
   });
 
@@ -191,7 +195,8 @@ const deleteTracksRequest = (ids: string[]) => {
     : deleteSingleTrackRequest(idsToDelete[0]);
 };
 
-export const useDeleteTracksMutation = () => useMutation({ mutationFn: deleteTracksRequest });
+export const useDeleteTracksMutation = (trackId: string) =>
+  useMutation({ mutationKey: ['delete-track', trackId], mutationFn: deleteTracksRequest });
 
 const uploadTrackRequest = async (arg: { trackId: string; file: File }) => {
   const data = new FormData();
@@ -211,7 +216,8 @@ const uploadTrackRequest = async (arg: { trackId: string; file: File }) => {
   return response;
 };
 
-export const useUploadTrackMutation = () => useMutation({ mutationFn: uploadTrackRequest });
+export const useUploadTrackMutation = (trackId: string) =>
+  useMutation({ mutationKey: ['add-track-upload', trackId], mutationFn: uploadTrackRequest });
 
 const deleteTrackUploadRequest = async (trackId: string) => {
   const response = await fetch(`${env.API_URL}/api/tracks/${trackId}/file`, {
@@ -222,5 +228,8 @@ const deleteTrackUploadRequest = async (trackId: string) => {
   }
 };
 
-export const useDeleteTrackUploadMutation = () =>
-  useMutation({ mutationFn: deleteTrackUploadRequest });
+export const useDeleteTrackUploadMutation = (trackId: string) =>
+  useMutation({
+    mutationKey: ['remove-track-upload', trackId],
+    mutationFn: deleteTrackUploadRequest,
+  });
