@@ -6,18 +6,19 @@ import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { TrackCreateEditFormBody } from '@/services/tracks';
+import { TrackCreateEditInput } from '@/services/tracks';
 
 import { TrackCreateEditForm, useTrackCreateEditForm } from './TrackCreateEditForm';
 
 type Props = {
   isOpen: boolean;
   isLoading?: boolean;
-  onSubmit: (data: TrackCreateEditFormBody) => void;
+  onSubmit: (data: TrackCreateEditInput) => void;
   onOpenChange: (isOpen: boolean) => void;
   onSubmitSuccessful?: () => void;
 };
@@ -44,6 +45,7 @@ export const CreateTrackModal: FC<Props> = ({ isOpen, onOpenChange, onSubmit, is
       <DialogContent data-testid="track-form">
         <DialogHeader>
           <DialogTitle>Create new track</DialogTitle>
+          <DialogDescription className="sr-only">Create a new track</DialogDescription>
         </DialogHeader>
 
         <TrackCreateEditForm formControl={formControl} isLoading={isLoading} />

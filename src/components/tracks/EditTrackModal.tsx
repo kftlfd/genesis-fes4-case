@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Track, TrackCreateEditFormBody } from '@/services/tracks';
+import { Track, TrackCreateEditInput } from '@/services/tracks';
 
 import { TrackCreateEditForm, useTrackCreateEditForm } from './TrackCreateEditForm';
 
@@ -19,7 +20,7 @@ type Props = {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onEditSuccessful?: (updTrack: Track) => void;
-  onSubmit: (data: TrackCreateEditFormBody) => void;
+  onSubmit: (data: TrackCreateEditInput) => void;
   isLoading?: boolean;
 };
 
@@ -45,6 +46,7 @@ export const EditTrackModal: FC<Props> = ({ track, isOpen, onOpenChange, onSubmi
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit track</DialogTitle>
+          <DialogDescription className="sr-only">Edit track</DialogDescription>
         </DialogHeader>
 
         <TrackCreateEditForm formControl={formControl} isLoading={isLoading} />

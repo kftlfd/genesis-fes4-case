@@ -5,7 +5,7 @@ import { FC, FormEvent } from 'react';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { createEditTrackSchema, TrackCreateEditFormBody } from '@/services/tracks';
+import { createEditTrackSchema, TrackCreateEditInput } from '@/services/tracks';
 
 import { GenresInput } from './GenresInput';
 
@@ -13,8 +13,8 @@ export const useTrackCreateEditForm = ({
   defaultValues,
   onSubmit,
 }: {
-  defaultValues: TrackCreateEditFormBody;
-  onSubmit: (data: TrackCreateEditFormBody) => void;
+  defaultValues: TrackCreateEditInput;
+  onSubmit: (data: TrackCreateEditInput) => void;
 }) => {
   const form = useForm({
     defaultValues,

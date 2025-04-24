@@ -6,21 +6,21 @@ import { FC, SyntheticEvent } from 'react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { ButtonWithTooltip } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { env } from '@/core/env';
 import { useModal } from '@/hooks/use-modal';
 import {
-  addUploadRequest,
+  addTrackUploadRequest,
   deleteTracksRequest,
   editTrackRequest,
-  removeUploadRequest,
+  removeTrackUploadRequest,
   Track,
 } from '@/services/tracks';
 
-import { ConfirmModal } from './ConfirmModal';
 import { EditTrackModal } from './EditTrackModal';
 import { UploadTrackModal } from './UploadTrackModal';
 
@@ -60,7 +60,7 @@ export const TrackCard: FC<Props> = ({
   });
 
   const addUploadMutation = useMutation({
-    mutationFn: addUploadRequest,
+    mutationFn: addTrackUploadRequest,
     onSuccess: () => {
       toast('Track upload added');
       addUploadMutation.reset();
@@ -73,7 +73,7 @@ export const TrackCard: FC<Props> = ({
   });
 
   const removeUploadMutation = useMutation({
-    mutationFn: removeUploadRequest,
+    mutationFn: removeTrackUploadRequest,
     onSuccess: () => {
       toast('Track upload removed');
       removeUploadMutation.reset();
@@ -147,38 +147,42 @@ export const TrackCard: FC<Props> = ({
         </div>
 
         <div className="flex gap-1">
-          <Button
+          <ButtonWithTooltip
+            tooltip="Edit track"
             onClick={() => editTrackModal.toggle(true)}
             isLoading={editTrackMutation.isPending}
             data-testid={`edit-track-${track.id}`}
           >
             <Edit />
-          </Button>
+          </ButtonWithTooltip>
 
           {track.audioFile ? (
-            <Button
+            <ButtonWithTooltip
+              tooltip="Remove audiofile"
               onClick={() => removeUploadModal.toggle(true)}
               isLoading={removeUploadMutation.isPending}
             >
               <XIcon />
-            </Button>
+            </ButtonWithTooltip>
           ) : (
-            <Button
+            <ButtonWithTooltip
+              tooltip="Add audiofile"
               onClick={() => addUploadModal.toggle(true)}
               isLoading={addUploadMutation.isPending}
               data-testid={`upload-track-${track.id}`}
             >
               <Upload />
-            </Button>
+            </ButtonWithTooltip>
           )}
 
-          <Button
+          <ButtonWithTooltip
+            tooltip="Delete track"
             onClick={() => deleteTrackModal.toggle(true)}
             isLoading={deleteTrackMutation.isPending}
             data-testid={`delete-track-${track.id}`}
           >
             <Trash />
-          </Button>
+          </ButtonWithTooltip>
         </div>
 
         {editTrackModal.isMounted && (
@@ -205,8 +209,11 @@ export const TrackCard: FC<Props> = ({
             isOpen={removeUploadModal.isOpen}
             onOpenChange={removeUploadModal.toggle}
             title="Delete track audio file?"
-            isLoading={removeUploadMutation.isPending}
             onConfirm={() => removeUploadMutation.mutate(track.id)}
+            actionBtnProps={{
+              variant: 'destructive',
+              isLoading: removeUploadMutation.isPending,
+            }}
           />
         )}
 
@@ -215,8 +222,11 @@ export const TrackCard: FC<Props> = ({
             isOpen={deleteTrackModal.isOpen}
             onOpenChange={deleteTrackModal.toggle}
             title="Delete track?"
-            isLoading={deleteTrackMutation.isPending}
             onConfirm={() => deleteTrackMutation.mutate([track.id])}
+            actionBtnProps={{
+              variant: 'destructive',
+              isLoading: deleteTrackMutation.isPending,
+            }}
           />
         )}
       </CardContent>

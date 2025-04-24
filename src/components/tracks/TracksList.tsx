@@ -10,32 +10,33 @@ import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loading';
 import { useDebouncedValue } from '@/hooks/use-debouce';
 import { useModal } from '@/hooks/use-modal';
+import { cn } from '@/lib/utils';
 import {
   createTrackRequest,
   deleteTracksRequest,
-  GetTracksListParams,
+  TracksListFilters,
   useGetTracksListQuery,
 } from '@/services/tracks';
 
 import { PagePagination } from './Pagination';
 import { TrackCard } from './TrackCard';
 import { TracksFilters } from './TracksFilters';
-import { TracksSelection } from './TracksSelection';
+import { TracksSelection, useTracksSelection } from './TracksSelection';
 
 export const TracksListPage: FC = () => {
-  const [filters, setFilters] = useState<GetTracksListParams>({
+  const [filters, setFilters] = useState<TracksListFilters>({
     page: 1,
-    limit: 4,
+    limit: 10,
   });
 
-  const handleUpdateFilters = (f: GetTracksListParams) => {
+  const handleUpdateFilters = (f: TracksListFilters) => {
     setFilters((prev) => ({ ...prev, ...f }));
   };
 
-  const { data, isLoading, isError, refetch } = useGetTracksListQuery({
+  const { data, isLoading, isError, isRefetching, refetch } = useGetTracksListQuery({
     ...filters,
-    artist: useDebouncedValue(filters.artist, 300)[0],
-    search: useDebouncedValue(filters.search, 300)[0],
+    artist: useDebouncedValue(filters.artist, 500)[0],
+    search: useDebouncedValue(filters.search, 500)[0],
   });
 
   const createTrackModal = useModal();
@@ -49,43 +50,25 @@ export const TracksListPage: FC = () => {
       createTrackMutation.reset();
     },
     onError: () => {
-      toast('create track failed');
+      toast('Create track failed');
     },
   });
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const selection = useTracksSelection();
 
-  const [isSelectModeEnabled, setIsSelectModeEnabled] = useState(false);
-
-  const handleSelectAll = () => {
-    setSelectedIds(
-      Array.from(new Set([...selectedIds, ...(data ? data.data.map((track) => track.id) : [])])),
-    );
-  };
-
-  const handleDeselctAll = () => {
-    setSelectedIds([]);
-  };
+  const handleSelectAll = () =>
+    selection.handleSelectMultiple(data ? data.data.map((track) => track.id) : []);
 
   const deleteTracksMutation = useMutation({
     mutationFn: deleteTracksRequest,
     onSuccess: () => {
       refetch();
-      handleDeselctAll();
+      selection.handleDeselctAll();
     },
   });
 
   const handleDeleteSelected = () => {
-    deleteTracksMutation.mutate(selectedIds);
-  };
-
-  const handleSelectChange = (trackId: string) => (selected: boolean) => {
-    if (selected && !selectedIds.includes(trackId)) {
-      setSelectedIds((prev) => [...prev, trackId]);
-    }
-    if (!selected) {
-      setSelectedIds((prev) => prev.filter((p) => p !== trackId));
-    }
+    deleteTracksMutation.mutate(selection.selectedIds);
   };
 
   const nowPlaying = useRef<HTMLAudioElement | null>(null);
@@ -118,48 +101,62 @@ export const TracksListPage: FC = () => {
 
       <TracksSelection
         className="py-4"
-        isSelectModeEnabled={isSelectModeEnabled}
-        toggleSelectMode={setIsSelectModeEnabled}
-        selectedCount={selectedIds.length}
+        isSelectModeEnabled={selection.isSelectModeEnabled}
+        toggleSelectMode={selection.toggleSelectMode}
+        selectedCount={selection.selectedIds.length}
         onSelectAll={handleSelectAll}
-        onDeselectAll={handleDeselctAll}
+        onDeselectAll={selection.handleDeselctAll}
         onDeleteSelected={handleDeleteSelected}
-        isDeleteSelectedDisabled={selectedIds.length < 1 || deleteTracksMutation.isPending}
+        isDeleteSelectedDisabled={
+          selection.selectedIds.length < 1 || deleteTracksMutation.isPending
+        }
       />
 
       <main>
-        <div id="tracks-list" className="flex flex-col gap-4">
-          {isLoading ? (
-            <div className="flex justify-center py-6">
-              <LoadingSpinner size={100} width={4} />
-            </div>
-          ) : isError || !data ? (
-            'error'
-          ) : (
-            data.data.map((track) => (
-              <TrackCard
-                key={track.id}
-                track={track}
-                isSelectModeEnabled={isSelectModeEnabled}
-                isSelected={selectedIds.includes(track.id)}
-                onSelectChange={handleSelectChange(track.id)}
-                onPlay={(e) => {
-                  if (e.currentTarget !== nowPlaying.current) nowPlaying.current?.pause();
-                  nowPlaying.current = e.currentTarget;
-                }}
-              />
-            ))
-          )}
-        </div>
-
-        {!isLoading && (
-          <div className="py-3">
-            <PagePagination
-              curPage={filters.page ?? 1}
-              totalPages={data?.meta.totalPages ?? 0}
-              onPageChange={(p) => setFilters((prev) => ({ ...prev, page: p }))}
-            />
+        {isLoading ? (
+          <div className="flex justify-center py-6">
+            <LoadingSpinner size={100} width={4} />
           </div>
+        ) : isError || !data ? (
+          <h2>Error</h2>
+        ) : (
+          <>
+            <div
+              id="tracks-list"
+              className={cn(
+                'flex flex-col gap-4',
+                isRefetching && 'pointer-none: relative opacity-50',
+              )}
+            >
+              {data.data.map((track) => (
+                <TrackCard
+                  key={track.id}
+                  track={track}
+                  isSelectModeEnabled={selection.isSelectModeEnabled}
+                  isSelected={selection.selectedIds.includes(track.id)}
+                  onSelectChange={selection.handleSelectChange(track.id)}
+                  onPlay={(e) => {
+                    if (e.currentTarget !== nowPlaying.current) nowPlaying.current?.pause();
+                    nowPlaying.current = e.currentTarget;
+                  }}
+                />
+              ))}
+
+              {isRefetching && (
+                <div className="absolute inset-0 grid place-content-center">
+                  <LoadingSpinner size={100} width={4} />
+                </div>
+              )}
+            </div>
+
+            <div className="pt-3 pb-10">
+              <PagePagination
+                curPage={filters.page ?? 1}
+                totalPages={data?.meta.totalPages ?? 0}
+                onPageChange={(p) => setFilters((prev) => ({ ...prev, page: p }))}
+              />
+            </div>
+          </>
         )}
       </main>
     </div>

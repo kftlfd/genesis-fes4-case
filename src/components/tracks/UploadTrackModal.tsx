@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -70,6 +71,9 @@ export const UploadTrackModal: FC<{
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Upload track</DialogTitle>
+          <DialogDescription className="sr-only">
+            Upload an audiofile for the track
+          </DialogDescription>
         </DialogHeader>
 
         <form.Field name="file">

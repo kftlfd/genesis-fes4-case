@@ -1,11 +1,43 @@
 'use client';
 
-import { FC } from 'react';
+import { FC, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import { Toggle } from '@/components/ui/toggle';
 import { cn } from '@/lib/utils';
+
+export const useTracksSelection = () => {
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const [isSelectModeEnabled, setIsSelectModeEnabled] = useState(false);
+
+  const handleSelectChange = (trackId: string) => (selected: boolean) => {
+    if (selected && !selectedIds.includes(trackId)) {
+      setSelectedIds((prev) => [...prev, trackId]);
+    }
+    if (!selected) {
+      setSelectedIds((prev) => prev.filter((p) => p !== trackId));
+    }
+  };
+
+  const handleSelectMultiple = (ids: string[]) => {
+    setSelectedIds(Array.from(new Set([...selectedIds, ...ids])));
+  };
+
+  const handleDeselctAll = () => {
+    setSelectedIds([]);
+  };
+
+  return {
+    selectedIds,
+    isSelectModeEnabled,
+    toggleSelectMode: setIsSelectModeEnabled,
+    handleSelectMultiple,
+    handleDeselctAll,
+    handleSelectChange,
+  };
+};
 
 type Props = {
   className?: string;

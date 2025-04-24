@@ -1,9 +1,7 @@
-import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 
-import { env } from '@/core/env';
-
-const sleep = (time: number) => new Promise((res) => setTimeout(res, time));
+import { api } from '@/core/http';
 
 const trackSchema = z.object({
   id: z.string(),
@@ -30,25 +28,9 @@ const tracksListSchema = z.object({
   }),
 });
 
-export type GetTracksListParams = {
-  page?: number;
-  limit?: number;
-  sort?: 'title' | 'artist' | 'album' | 'createdAt';
-  order?: 'asc' | 'desc';
-  search?: string;
-  genre?: string;
-  artist?: string;
-};
-
-const getTracksListSearchParamsSchema = z.object({
-  page: z
-    .number()
-    .transform((v) => v.toString())
-    .optional(),
-  limit: z
-    .number()
-    .transform((v) => v.toString())
-    .optional(),
+const tracksListFiltersSchema = z.object({
+  page: z.number().optional(),
+  limit: z.number().optional(),
   sort: z.enum(['title', 'artist', 'album', 'createdAt']).optional(),
   order: z.enum(['asc', 'desc']).optional(),
   search: z.string().optional(),
@@ -56,21 +38,23 @@ const getTracksListSearchParamsSchema = z.object({
   artist: z.string().optional(),
 });
 
-const getTracksListRequest = async (params?: GetTracksListParams) => {
-  const searchParams = new URLSearchParams(
-    Object.entries(getTracksListSearchParamsSchema.parse(params)).reduce(
-      (acc: [string, string][], [key, val]) => {
-        if (val) {
-          acc.push([key, val]);
+export type TracksListFilters = z.infer<typeof tracksListFiltersSchema>;
+
+const getTracksListRequest = async (filters: TracksListFilters = {}) => {
+  try {
+    const parsedFilters = tracksListFiltersSchema.parse(filters);
+
+    const searchParams = new URLSearchParams(
+      Object.entries(parsedFilters).reduce((acc: [string, string][], [key, val]) => {
+        if (val !== undefined && val !== '') {
+          acc.push([key, val.toString()]);
         }
         return acc;
-      },
-      [],
-    ),
-  );
+      }, []),
+    );
 
-  const response = await fetch(`${env.API_URL}/api/tracks?${searchParams.toString()}`);
-  try {
+    const response = await api(`tracks?${searchParams.toString()}`);
+
     return tracksListSchema.parse(await response.json());
   } catch (err) {
     console.error(err);
@@ -78,12 +62,14 @@ const getTracksListRequest = async (params?: GetTracksListParams) => {
   }
 };
 
-export const useGetTracksListQuery = (params?: GetTracksListParams) =>
+export const TRACKS_LIST_QUERY_KEY = 'all-tracks';
+
+export const useGetTracksListQuery = (params?: TracksListFilters) =>
   useQuery({
-    queryKey: ['all-tracks', params] as const,
+    queryKey: [TRACKS_LIST_QUERY_KEY, params] as const,
     queryFn: ({ queryKey }) => {
-      const [, p] = queryKey;
-      return getTracksListRequest(p);
+      const [, filters] = queryKey;
+      return getTracksListRequest(filters);
     },
     placeholderData: keepPreviousData,
   });
@@ -96,94 +82,68 @@ export const createEditTrackSchema = z.object({
   coverImage: z.string().url().or(z.literal('')),
 });
 
-export type TrackCreateEditFormBody = z.infer<typeof createEditTrackSchema>;
+export type TrackCreateEditInput = z.infer<typeof createEditTrackSchema>;
 
-export const createTrackRequest = async (track: TrackCreateEditFormBody) => {
-  const body = createEditTrackSchema.parse(track);
-  const response = await fetch(`${env.API_URL}/api/tracks`, {
+export const createTrackRequest = async (data: TrackCreateEditInput) => {
+  const body = createEditTrackSchema.parse(data);
+
+  const response = await api('tracks', {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
-    headers: {
-      'Content-Type': 'application/json',
-    },
   });
-  try {
-    return trackSchema.parse(await response.json());
-  } catch (err) {
-    console.error(err);
-    throw err;
-  }
+
+  return trackSchema.parse(await response.json());
 };
 
-export const useCreateTrackMutation = () =>
-  useMutation({
-    mutationFn: createTrackRequest,
+export const editTrackRequest = async (arg: { trackId: string; data: TrackCreateEditInput }) => {
+  const body = createEditTrackSchema.parse(arg.data);
+
+  const response = await api(`tracks/${arg.trackId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
   });
 
-export const editTrackRequest = async ({
-  trackId,
-  data,
-}: {
-  trackId: string;
-  data: TrackCreateEditFormBody;
-}) => {
-  try {
-    const body = createEditTrackSchema.parse(data);
-    const response = await fetch(`${env.API_URL}/api/tracks/${trackId}`, {
-      method: 'PUT',
-      body: JSON.stringify(body),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    await sleep(500);
-    return trackSchema.parse(await response.json());
-  } catch (err) {
-    console.error(err);
-    throw err;
-  }
+  return trackSchema.parse(await response.json());
 };
 
-export const useEditTrackMutation = (trackId: string) =>
-  useMutation({
-    mutationKey: ['edit-track', trackId],
-    mutationFn: editTrackRequest,
-  });
-
-const deleteTracksResponseSchema = z.object({
+const deleteTracksResultSchema = z.object({
   success: z.array(z.string()),
   failed: z.array(z.string()),
 });
 
-type DeleteTracksResult = z.infer<typeof deleteTracksResponseSchema>;
+type DeleteTracksResult = z.infer<typeof deleteTracksResultSchema>;
 
-const deleteSingleTrackRequest = async (id: string) => {
+const deleteSingleTrackRequest = async (trackId: string) => {
   try {
-    const response = await fetch(`${env.API_URL}/api/tracks/${id}`, { method: 'DELETE' });
-    if (response.ok)
+    const response = await api(`tracks/${trackId}`, { method: 'DELETE' });
+
+    if (response.ok) {
       return {
-        success: [id],
+        success: [trackId],
         failed: [],
       } satisfies DeleteTracksResult;
+    }
+
     throw new Error('request failed');
   } catch {
     return {
       success: [],
-      failed: [id],
+      failed: [trackId],
     } satisfies DeleteTracksResult;
   }
 };
 
 const deleteMultipleTracksRequest = async (ids: string[]) => {
   try {
-    const response = await fetch(`${env.API_URL}/api/tracks/delete`, {
+    const response = await api('tracks/delete', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ids }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
     });
-    return deleteTracksResponseSchema.parse(await response.json());
+
+    return deleteTracksResultSchema.parse(await response.json());
   } catch {
     return {
       success: [],
@@ -192,44 +152,33 @@ const deleteMultipleTracksRequest = async (ids: string[]) => {
   }
 };
 
-const deleteTracksSchema = z.array(z.string()).min(1);
-
 export const deleteTracksRequest = (ids: string[]) => {
-  const idsToDelete = deleteTracksSchema.parse(ids);
+  if (ids.length < 1) {
+    throw new Error('ids array is empty');
+  }
 
-  return idsToDelete.length > 1
-    ? deleteMultipleTracksRequest(idsToDelete)
-    : deleteSingleTrackRequest(idsToDelete[0]);
+  return ids.length > 1 ? deleteMultipleTracksRequest(ids) : deleteSingleTrackRequest(ids[0]);
 };
 
-export const useDeleteTracksMutation = (trackId: string) =>
-  useMutation({ mutationKey: ['delete-track', trackId], mutationFn: deleteTracksRequest });
-
-export const addUploadRequest = async (arg: { trackId: string; file: File }) => {
+export const addTrackUploadRequest = async (arg: { trackId: string; file: File }) => {
   const data = new FormData();
   data.append('file', arg.file, arg.file.name);
 
-  const response = await fetch(`${env.API_URL}/api/tracks/${arg.trackId}/upload`, {
+  const response = await api(`tracks/${arg.trackId}/upload`, {
     method: 'POST',
     body: data,
-    // headers: {
-    //   'content-type': 'audio/mp3', // arg.file.type,
-    //   'content-length': `${arg.file.size}`,
-    // },
   });
+
   if (!response.ok) {
     throw new Error('upload failed');
   }
+
   return response;
 };
 
-export const useUploadTrackMutation = (trackId: string) =>
-  useMutation({ mutationKey: ['add-track-upload', trackId], mutationFn: addUploadRequest });
+export const removeTrackUploadRequest = async (trackId: string) => {
+  const response = await api(`tracks/${trackId}/file`, { method: 'DELETE' });
 
-export const removeUploadRequest = async (trackId: string) => {
-  const response = await fetch(`${env.API_URL}/api/tracks/${trackId}/file`, {
-    method: 'DELETE',
-  });
   if (!response.ok) {
     throw new Error('request failed');
   }

@@ -1,9 +1,10 @@
-import { FC } from 'react';
+import { ComponentProps, FC } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -12,44 +13,43 @@ import {
 type Props = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: () => void;
-  isLoading?: boolean;
   title: string;
+  description?: string;
   actionText?: string;
-  actionDisabled?: boolean;
+  cancelText?: string;
+  cancelBtnProps?: ComponentProps<typeof Button>;
+  actionBtnProps?: ComponentProps<typeof Button>;
+  onConfirm: () => void;
 };
 
 export const ConfirmModal: FC<Props> = ({
   isOpen,
   onOpenChange,
-  onConfirm,
   title,
+  description,
   actionText = 'Confirm',
-  actionDisabled,
-  isLoading,
+  cancelText = 'Cancel',
+  cancelBtnProps,
+  actionBtnProps,
+  onConfirm,
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent data-testid="confirm-dialog">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
+          {description ? (
+            <DialogDescription>{description}</DialogDescription>
+          ) : (
+            <DialogDescription className="sr-only">{title}</DialogDescription>
+          )}
         </DialogHeader>
         <DialogFooter>
           <div className="flex justify-end gap-4">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              data-testid="cancel-delete"
-            >
-              Cancel
+            <Button variant="outline" onClick={() => onOpenChange(false)} {...cancelBtnProps}>
+              {cancelText}
             </Button>
-            <Button
-              variant="destructive"
-              onClick={() => onConfirm()}
-              disabled={actionDisabled}
-              data-testid="confirm-delete"
-              isLoading={isLoading}
-            >
+            <Button onClick={() => onConfirm()} {...actionBtnProps}>
               {actionText}
             </Button>
           </div>

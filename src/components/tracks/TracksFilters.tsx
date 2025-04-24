@@ -14,33 +14,24 @@ import {
 import { DataAttrsProps } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useGetGenresListQuery } from '@/services/genres';
-import { GetTracksListParams } from '@/services/tracks';
+import { TracksListFilters } from '@/services/tracks';
 
-type Props = {
+const SelectFilter: FC<{
   label: string;
   value: string;
   placeholder?: string;
   options: [string, ReactNode][];
   onChange: (value: string) => void;
   triggerProps?: ComponentProps<typeof SelectTrigger>;
-};
-
-const SelectFilter: FC<Props> = ({
-  label,
-  value,
-  placeholder,
-  options,
-  onChange,
-  triggerProps,
-}) => (
-  <div className="flex min-w-35 grow basis-0 items-center gap-1 rounded-sm border p-1">
+}> = ({ label, value, placeholder, options, onChange, triggerProps }) => (
+  <div className="flex grow basis-50 items-center gap-1 rounded-sm border p-1">
     <span>{label}</span>
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger className={cn('grow', triggerProps?.className)} {...triggerProps}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value={FILTER_NONE}>{placeholder}</SelectItem>
+        {!!placeholder && <SelectItem value={FILTER_NONE}>{placeholder}</SelectItem>}
         {options.map(([val, label]) => (
           <SelectItem key={val} value={val}>
             {label}
@@ -58,7 +49,7 @@ const InputFilter: FC<{
   onChange: (value: string) => void;
   inputProps?: ComponentProps<'input'> & DataAttrsProps;
 }> = ({ label, value, onChange, inputProps }) => (
-  <div className="flex min-w-45 grow basis-0 items-center gap-1 rounded-sm border p-1">
+  <div className="flex grow basis-60 items-center gap-1 rounded-sm border p-1">
     <span>{label}</span>
     <Input
       className={cn('grow', inputProps?.className)}
@@ -73,17 +64,20 @@ const InputFilter: FC<{
 const FILTER_NONE = '__none__';
 
 export const TracksFilters: FC<{
-  filters: GetTracksListParams;
-  setFilters: (filters: GetTracksListParams) => void;
+  filters: TracksListFilters;
+  setFilters: (filters: TracksListFilters) => void;
   className?: string;
 }> = ({ filters, setFilters, className }) => {
-  const genresQuery = useGetGenresListQuery();
+  const { data: genres = [] } = useGetGenresListQuery();
 
-  const updateFilter = <K extends keyof GetTracksListParams>(
+  const updateFilter = <K extends keyof TracksListFilters>(
     key: K,
-    val: GetTracksListParams[K],
+    val: TracksListFilters[K] | typeof FILTER_NONE,
   ) => {
-    setFilters({ ...filters, [key]: val });
+    setFilters({
+      ...filters,
+      [key]: val === FILTER_NONE ? undefined : val,
+    });
   };
 
   return (
@@ -98,11 +92,9 @@ export const TracksFilters: FC<{
             ['album', 'Album'],
             ['title', 'Title'],
             ['createdAt', 'Date created'],
-          ] satisfies [GetTracksListParams['sort'], string][]
+          ] satisfies [TracksListFilters['sort'], string][]
         }
-        onChange={(v) =>
-          updateFilter('sort', v === FILTER_NONE ? undefined : (v as GetTracksListParams['sort']))
-        }
+        onChange={(v) => updateFilter('sort', v as TracksListFilters['sort'])}
         triggerProps={{
           'data-testid': 'sort-select',
         }}
@@ -112,8 +104,8 @@ export const TracksFilters: FC<{
         label="Genre"
         value={filters.genre ?? ''}
         placeholder="Any"
-        options={(genresQuery.data ?? []).map((v) => [v, v])}
-        onChange={(v) => updateFilter('genre', v === FILTER_NONE ? undefined : v)}
+        options={genres.map((v) => [v, v])}
+        onChange={(v) => updateFilter('genre', v)}
         triggerProps={{
           'data-testid': 'filter-genre',
         }}
@@ -127,24 +119,22 @@ export const TracksFilters: FC<{
           [
             ['asc', <ArrowUp key="asc" />],
             ['desc', <ArrowUp key="desc" className="rotate-180" />],
-          ] satisfies [GetTracksListParams['order'], ReactNode][]
+          ] satisfies [TracksListFilters['order'], ReactNode][]
         }
-        onChange={(v) =>
-          updateFilter('order', v === FILTER_NONE ? undefined : (v as GetTracksListParams['order']))
-        }
+        onChange={(v) => updateFilter('order', v as TracksListFilters['order'])}
       />
 
       <SelectFilter
         label="On page"
         value={filters.limit?.toString() ?? ''}
-        options={[4, 10, 20].map((v) => [v.toString(), v.toString()])}
+        options={['4', '10', '20'].map((v) => [v, v])}
         onChange={(v) => updateFilter('limit', Number(v))}
       />
 
       <InputFilter
         label="Artist"
         value={filters.artist ?? ''}
-        onChange={(v) => updateFilter('artist', v === '' ? undefined : v)}
+        onChange={(v) => updateFilter('artist', v)}
         inputProps={{
           'data-testid': 'filter-artist',
         }}
@@ -153,7 +143,7 @@ export const TracksFilters: FC<{
       <InputFilter
         label="Search"
         value={filters.search ?? ''}
-        onChange={(v) => updateFilter('search', v === '' ? undefined : v)}
+        onChange={(v) => updateFilter('search', v)}
         inputProps={{
           'data-testid': 'search-input',
         }}
