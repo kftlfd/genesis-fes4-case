@@ -1,7 +1,17 @@
 'use client';
 
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Edit, Trash, Upload, XIcon } from 'lucide-react';
+import { FC, SyntheticEvent } from 'react';
+import { toast } from 'sonner';
+
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
+import { env } from '@/core/env';
+import { useModal } from '@/hooks/use-modal';
 import {
   addUploadRequest,
   deleteTracksRequest,
@@ -9,18 +19,10 @@ import {
   removeUploadRequest,
   Track,
 } from '@/services/tracks';
-import { Edit, Trash, Upload, XIcon } from 'lucide-react';
-import { FC, SyntheticEvent } from 'react';
-import { Card, CardContent } from '../ui/card';
-import { EditTrackModal } from './EditTrackModal';
-import { Badge } from '../ui/badge';
-import { env } from '@/core/env';
-import { UploadTrackModal } from './UploadTrackModal';
+
 import { ConfirmModal } from './ConfirmModal';
-import { Collapsible, CollapsibleContent } from '../ui/collapsible';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { useModal } from '@/hooks/use-modal';
+import { EditTrackModal } from './EditTrackModal';
+import { UploadTrackModal } from './UploadTrackModal';
 
 type Props = {
   track: Track;

@@ -1,22 +1,38 @@
 'use client';
 
-import { GetTracksListParams } from '@/services/tracks';
 import { ArrowUp } from 'lucide-react';
 import { ComponentProps, FC, ReactNode } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Input } from '../ui/input';
-import { useGetGenresListQuery } from '@/services/genres';
-import { cn } from '@/lib/utils';
-import { DataAttrsProps } from '@/lib/types';
 
-const SelectFilter: FC<{
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { DataAttrsProps } from '@/lib/types';
+import { cn } from '@/lib/utils';
+import { useGetGenresListQuery } from '@/services/genres';
+import { GetTracksListParams } from '@/services/tracks';
+
+type Props = {
   label: string;
   value: string;
   placeholder?: string;
   options: [string, ReactNode][];
   onChange: (value: string) => void;
   triggerProps?: ComponentProps<typeof SelectTrigger>;
-}> = ({ label, value, placeholder, options, onChange, triggerProps }) => (
+};
+
+const SelectFilter: FC<Props> = ({
+  label,
+  value,
+  placeholder,
+  options,
+  onChange,
+  triggerProps,
+}) => (
   <div className="flex min-w-35 grow basis-0 items-center gap-1 rounded-sm border p-1">
     <span>{label}</span>
     <Select value={value} onValueChange={onChange}>

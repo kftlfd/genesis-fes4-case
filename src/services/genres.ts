@@ -1,5 +1,6 @@
-import { env } from '@/core/env';
 import { useQuery } from '@tanstack/react-query';
+
+import { env } from '@/core/env';
 
 const getGenresRequest = async () => {
   const response = await fetch(`${env.API_URL}/api/genres`);

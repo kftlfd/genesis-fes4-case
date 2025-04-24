@@ -1,10 +1,17 @@
 import { useForm } from '@tanstack/react-form';
-import { FC, useRef } from 'react';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
-import { Button } from '../ui/button';
 import { XIcon } from 'lucide-react';
+import { FC, useRef } from 'react';
 import { z } from 'zod';
-import { Card, CardContent } from '../ui/card';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const AUDIOFILE_TYPES = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/x-wav'];
 
@@ -29,7 +36,6 @@ const uploadTrackSchema = z.object({
 type SubmitData = z.infer<typeof uploadTrackSchema>;
 
 export const UploadTrackModal: FC<{
-  // track: Track;
   isOpen: boolean;
   isLoading?: boolean;
   onSubmit: (data: SubmitData) => void;
@@ -38,19 +44,15 @@ export const UploadTrackModal: FC<{
 }> = ({ isOpen, isLoading, onOpenChange, onSubmit }) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  // const uploadTrackMutation = useUploadTrackMutation();
-
   const form = useForm({
     defaultValues,
     validators: {
       onSubmit: uploadTrackSchema,
     },
-    onSubmit: async ({ value }) => {
+    onSubmit: ({ value }) => {
       console.log(value);
       const v = uploadTrackSchema.parse(value);
-      await onSubmit(v);
-      // await uploadTrackMutation.mutateAsync({ trackId: track.id, file: v.file });
-      // onUploadSuccessful?.();
+      onSubmit(v);
     },
   });
 

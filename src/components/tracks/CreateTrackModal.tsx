@@ -1,10 +1,18 @@
 'use client';
 
 import { FC } from 'react';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
-import { Button } from '../ui/button';
-import { TrackCreateEditForm, useTrackCreateEditForm } from './TrackCreateEditForm';
+
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { TrackCreateEditFormBody } from '@/services/tracks';
+
+import { TrackCreateEditForm, useTrackCreateEditForm } from './TrackCreateEditForm';
 
 type Props = {
   isOpen: boolean;

@@ -1,13 +1,14 @@
 'use client';
 
-import { FC, useMemo } from 'react';
-import { Badge } from '../ui/badge';
 import { PlusIcon, XIcon } from 'lucide-react';
-import { Button } from '../ui/button';
-import { useGetGenresListQuery } from '@/services/genres';
-import { Select, SelectContent, SelectItem, SelectTrigger } from '../ui/select';
-import { LoadingSpinner } from '../ui/loading';
+import { FC, useMemo } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { LoadingSpinner } from '@/components/ui/loading';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { useGetGenresListQuery } from '@/services/genres';
 
 type Props = {
   value: string[];

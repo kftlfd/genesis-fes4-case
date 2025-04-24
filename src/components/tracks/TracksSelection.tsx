@@ -1,6 +1,7 @@
 'use client';
 
 import { FC } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import { Toggle } from '@/components/ui/toggle';

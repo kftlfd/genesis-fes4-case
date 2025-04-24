@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
-import { FC } from 'react';
 import { Geist, Geist_Mono } from 'next/font/google';
-import { QueryClientProvider } from '@/core/queryClientProvider';
+import { FC } from 'react';
+
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
+import { QueryClientProvider } from '@/core/queryClientProvider';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',

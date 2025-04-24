@@ -1,7 +1,7 @@
 'use client';
 
-import { FC, ReactNode } from 'react';
 import { QueryClient, QueryClientProvider as RQProvider } from '@tanstack/react-query';
+import { FC, ReactNode } from 'react';
 
 const queryClient = new QueryClient({
   defaultOptions: {

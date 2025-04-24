@@ -1,11 +1,13 @@
 'use client';
 
-import { FC, FormEvent } from 'react';
 import { useForm } from '@tanstack/react-form';
-import { Label } from '../ui/label';
-import { Input } from '../ui/input';
-import { GenresInput } from './GenresInput';
+import { FC, FormEvent } from 'react';
+
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { createEditTrackSchema, TrackCreateEditFormBody } from '@/services/tracks';
+
+import { GenresInput } from './GenresInput';
 
 export const useTrackCreateEditForm = ({
   defaultValues,

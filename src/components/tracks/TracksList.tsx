@@ -1,24 +1,26 @@
 'use client';
 
+import { useMutation } from '@tanstack/react-query';
+import { PlusIcon } from 'lucide-react';
+import { FC, useRef, useState } from 'react';
+import { toast } from 'sonner';
+
 import { CreateTrackModal } from '@/components/tracks/CreateTrackModal';
 import { Button } from '@/components/ui/button';
+import { LoadingSpinner } from '@/components/ui/loading';
+import { useDebouncedValue } from '@/hooks/use-debouce';
+import { useModal } from '@/hooks/use-modal';
 import {
   createTrackRequest,
   deleteTracksRequest,
   GetTracksListParams,
   useGetTracksListQuery,
 } from '@/services/tracks';
-import { PlusIcon } from 'lucide-react';
-import { FC, useRef, useState } from 'react';
-import { LoadingSpinner } from '../ui/loading';
+
 import { PagePagination } from './Pagination';
-import { useDebouncedValue } from '@/hooks/use-debouce';
+import { TrackCard } from './TrackCard';
 import { TracksFilters } from './TracksFilters';
 import { TracksSelection } from './TracksSelection';
-import { TrackCard } from './TrackCard';
-import { useMutation } from '@tanstack/react-query';
-import { useModal } from '@/hooks/use-modal';
-import { toast } from 'sonner';
 
 export const TracksListPage: FC = () => {
   const [filters, setFilters] = useState<GetTracksListParams>({
