@@ -3,6 +3,7 @@ import { FC } from 'react';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { QueryClientProvider } from '@/core/queryClientProvider';
 import './globals.css';
+import { Toaster } from '@/components/ui/sonner';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -26,6 +27,7 @@ const RootLayout: FC<{
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <QueryClientProvider>{children}</QueryClientProvider>
+        <Toaster position="top-right" />
       </body>
     </html>
   );

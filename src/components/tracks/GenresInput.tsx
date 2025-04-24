@@ -9,11 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from '../ui/select';
 import { LoadingSpinner } from '../ui/loading';
 import { cn } from '@/lib/utils';
 
-export const GenresInput: FC<{
+type Props = {
   value: string[];
   onChange: (val: string[]) => void;
   disabled?: boolean;
-}> = ({ value, onChange, disabled }) => {
+};
+
+export const GenresInput: FC<Props> = ({ value, onChange, disabled }) => {
   const genresQuery = useGetGenresListQuery();
 
   const selectOptions = useMemo(() => {

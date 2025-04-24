@@ -2,30 +2,23 @@
 
 import { CreateTrackModal } from '@/components/tracks/CreateTrackModal';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
+  createTrackRequest,
+  deleteTracksRequest,
   GetTracksListParams,
-  Track,
-  useDeleteTracksMutation,
-  useDeleteTrackUploadMutation,
   useGetTracksListQuery,
 } from '@/services/tracks';
-import { Edit, PlusIcon, Trash, Upload, XIcon } from 'lucide-react';
+import { PlusIcon } from 'lucide-react';
 import { FC, useRef, useState } from 'react';
-import { Card, CardContent } from '../ui/card';
-import { EditTrackModal } from './EditTrackModal';
-import { Badge } from '../ui/badge';
-import { env } from '@/core/env';
-import { UploadTrackModal } from './UploadTrackModal';
-import { ConfirmModal } from './ConfirmModal';
 import { LoadingSpinner } from '../ui/loading';
 import { PagePagination } from './Pagination';
 import { useDebouncedValue } from '@/hooks/use-debouce';
 import { TracksFilters } from './TracksFilters';
-import { Toggle } from '../ui/toggle';
-import { Collapsible, CollapsibleContent } from '../ui/collapsible';
 import { TracksSelection } from './TracksSelection';
 import { TrackCard } from './TrackCard';
+import { useMutation } from '@tanstack/react-query';
+import { useModal } from '@/hooks/use-modal';
+import { toast } from 'sonner';
 
 export const TracksListPage: FC = () => {
   const [filters, setFilters] = useState<GetTracksListParams>({
@@ -43,23 +36,22 @@ export const TracksListPage: FC = () => {
     search: useDebouncedValue(filters.search, 300)[0],
   });
 
-  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const createTrackModal = useModal();
+
+  const createTrackMutation = useMutation({
+    mutationFn: createTrackRequest,
+    onSuccess: () => {
+      toast('Track created');
+      refetch();
+      createTrackModal.toggle(false);
+      createTrackMutation.reset();
+    },
+    onError: () => {
+      toast('create track failed');
+    },
+  });
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-
-  const [trackToEdit, setTrackToEdit] = useState<Track | null>(null);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-
-  const [trackToUpload, setTrackToUpload] = useState<Track | null>(null);
-  const [uploadTrackModalOpen, setUploadTrackModalOpen] = useState(false);
-
-  const [confirmDeleteTrackModalOpen, setConfirmDeleteTrackModalOpen] = useState(false);
-  const [deleteTrackId, setDeleteTrackId] = useState<string | null>(null);
-  const deleteMutation = useDeleteTracksMutation(deleteTrackId ?? '');
-
-  const [confirmDeleteUploadModalOpen, setConfirmDeleteUploadModalOpen] = useState(false);
-  const [deleteUploadId, setDeleteUploadId] = useState<string | null>(null);
-  const deleteUpload = useDeleteTrackUploadMutation(deleteUploadId ?? '');
 
   const [isSelectModeEnabled, setIsSelectModeEnabled] = useState(false);
 
@@ -73,13 +65,25 @@ export const TracksListPage: FC = () => {
     setSelectedIds([]);
   };
 
+  const deleteTracksMutation = useMutation({
+    mutationFn: deleteTracksRequest,
+    onSuccess: () => {
+      refetch();
+      handleDeselctAll();
+    },
+  });
+
   const handleDeleteSelected = () => {
-    deleteMutation.mutate(selectedIds, {
-      onSuccess: () => {
-        refetch();
-        handleDeselctAll();
-      },
-    });
+    deleteTracksMutation.mutate(selectedIds);
+  };
+
+  const handleSelectChange = (trackId: string) => (selected: boolean) => {
+    if (selected && !selectedIds.includes(trackId)) {
+      setSelectedIds((prev) => [...prev, trackId]);
+    }
+    if (!selected) {
+      setSelectedIds((prev) => prev.filter((p) => p !== trackId));
+    }
   };
 
   const nowPlaying = useRef<HTMLAudioElement | null>(null);
@@ -90,7 +94,7 @@ export const TracksListPage: FC = () => {
         <h1 className="text-3xl">Tracks</h1>
 
         <div>
-          <Button onClick={() => setCreateModalOpen(true)} data-testid="create-track-button">
+          <Button onClick={() => createTrackModal.toggle(true)} data-testid="create-track-button">
             <span className="flex items-center gap-1">
               <PlusIcon />
               <span>Create</span>
@@ -98,75 +102,12 @@ export const TracksListPage: FC = () => {
           </Button>
         </div>
 
-        <CreateTrackModal
-          isOpen={createModalOpen}
-          onOpenChange={setCreateModalOpen}
-          onSubmitSuccessful={async () => {
-            refetch();
-            await new Promise((res) => setTimeout(res, 1000));
-            setCreateModalOpen(false);
-          }}
-        />
-
-        {trackToEdit && (
-          <EditTrackModal
-            key={trackToEdit.id}
-            track={trackToEdit}
-            isOpen={editModalOpen}
-            onOpenChange={setEditModalOpen}
-            onEditSuccessful={async () => {
-              refetch();
-              await new Promise((res) => setTimeout(res, 1000));
-              setEditModalOpen(false);
-            }}
-          />
-        )}
-
-        {trackToUpload && (
-          <UploadTrackModal
-            key={trackToUpload.id}
-            track={trackToUpload}
-            isOpen={uploadTrackModalOpen}
-            onOpenChange={setUploadTrackModalOpen}
-            onUploadSuccessful={async () => {
-              refetch();
-              await new Promise((res) => setTimeout(res, 300));
-              setUploadTrackModalOpen(false);
-            }}
-          />
-        )}
-
-        {deleteTrackId && (
-          <ConfirmModal
-            title="Delete track?"
-            isOpen={confirmDeleteTrackModalOpen}
-            onOpenChange={setConfirmDeleteTrackModalOpen}
-            onConfirm={() => {
-              deleteMutation.mutate([deleteTrackId], {
-                onSuccess: () => {
-                  refetch();
-                  setConfirmDeleteTrackModalOpen(false);
-                },
-              });
-            }}
-            actionDisabled={deleteMutation.isPending}
-          />
-        )}
-
-        {deleteUploadId && (
-          <ConfirmModal
-            title="Delete track audio file?"
-            isOpen={confirmDeleteUploadModalOpen}
-            onOpenChange={setConfirmDeleteUploadModalOpen}
-            onConfirm={() => {
-              deleteUpload.mutate(deleteUploadId, {
-                onSuccess: () => {
-                  refetch();
-                  setConfirmDeleteUploadModalOpen(false);
-                },
-              });
-            }}
-            actionDisabled={deleteUpload.isPending}
+        {createTrackModal.isMounted && (
+          <CreateTrackModal
+            isOpen={createTrackModal.isOpen}
+            onOpenChange={createTrackModal.toggle}
+            isLoading={createTrackMutation.isPending}
+            onSubmit={createTrackMutation.mutate}
           />
         )}
       </header>
@@ -181,7 +122,7 @@ export const TracksListPage: FC = () => {
         onSelectAll={handleSelectAll}
         onDeselectAll={handleDeselctAll}
         onDeleteSelected={handleDeleteSelected}
-        isDeleteSelectedDisabled={selectedIds.length < 1 || deleteMutation.isPending}
+        isDeleteSelectedDisabled={selectedIds.length < 1 || deleteTracksMutation.isPending}
       />
 
       <main>
@@ -199,130 +140,12 @@ export const TracksListPage: FC = () => {
                 track={track}
                 isSelectModeEnabled={isSelectModeEnabled}
                 isSelected={selectedIds.includes(track.id)}
-                onSelectChange={(checked) => {
-                  if (checked === true && !selectedIds.includes(track.id)) {
-                    setSelectedIds((prev) => [...prev, track.id]);
-                  }
-                  if (checked === false) {
-                    setSelectedIds((prev) => prev.filter((p) => p !== track.id));
-                  }
-                }}
+                onSelectChange={handleSelectChange(track.id)}
                 onPlay={(e) => {
                   if (e.currentTarget !== nowPlaying.current) nowPlaying.current?.pause();
                   nowPlaying.current = e.currentTarget;
                 }}
               />
-              /*
-              <Card key={track.id} className="py-3" data-testid={`track-item-${track.id}`}>
-                <CardContent className="flex gap-2 px-3">
-                  <Collapsible open={isSelectModeEnabled}>
-                    <CollapsibleContent>
-                      <Checkbox
-                        checked={selectedIds.includes(track.id)}
-                        onCheckedChange={(checked) => {
-                          if (checked === true && !selectedIds.includes(track.id)) {
-                            setSelectedIds((prev) => [...prev, track.id]);
-                          }
-                          if (checked === false) {
-                            setSelectedIds((prev) => prev.filter((p) => p !== track.id));
-                          }
-                        }}
-                        data-testid={`track-checkbox-${track.id}`}
-                      />
-                    </CollapsibleContent>
-                  </Collapsible>
-
-                  <picture className="relative h-20 w-20">
-                    <source srcSet={track.coverImage} />
-                    <source srcSet="/track-cover-placeholder.webp" />
-                    <img
-                      className="absolute inset-0 block h-full w-full object-cover object-center"
-                      alt={`${track.artist} - ${track.title}`}
-                      title={`${track.artist} - ${track.title}`}
-                    />
-                  </picture>
-
-                  <div className="grow">
-                    <div>
-                      <span data-testid={`track-item-${track.id}-artist`}>{track.artist}</span>-
-                      <span data-testid={`track-item-${track.id}-title`}>{track.title}</span>
-                    </div>
-                    <div>{track.album}</div>
-
-                    {track.genres.length > 0 && (
-                      <div className="flex gap-1 pt-2">
-                        {track.genres.map((g) => (
-                          <Badge key={g}>{g}</Badge>
-                        ))}
-                      </div>
-                    )}
-
-                    {track.audioFile && (
-                      <div className="pt-2">
-                        <audio
-                          className="w-full"
-                          controls
-                          onPlay={(e) => {
-                            if (e.currentTarget !== nowPlaying.current) nowPlaying.current?.pause();
-                            nowPlaying.current = e.currentTarget;
-                          }}
-                        >
-                          <source
-                            src={`${env.API_URL}/api/files/${track.audioFile}`}
-                            type="audio/mp3"
-                          />
-                        </audio>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex gap-1">
-                    <Button
-                      onClick={() => {
-                        setEditModalOpen(true);
-                        setTrackToEdit(track);
-                      }}
-                      data-testid={`edit-track-${track.id}`}
-                    >
-                      <Edit />
-                    </Button>
-
-                    {track.audioFile ? (
-                      <Button
-                        onClick={() => {
-                          setDeleteUploadId(track.id);
-                          setConfirmDeleteUploadModalOpen(true);
-                        }}
-                        disabled={deleteUpload.isPending}
-                      >
-                        <XIcon />
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={() => {
-                          setUploadTrackModalOpen(true);
-                          setTrackToUpload(track);
-                        }}
-                        data-testid={`upload-track-${track.id}`}
-                      >
-                        <Upload />
-                      </Button>
-                    )}
-
-                    <Button
-                      onClick={() => {
-                        setDeleteTrackId(track.id);
-                        setConfirmDeleteTrackModalOpen(true);
-                      }}
-                      disabled={deleteMutation.isPending}
-                      data-testid={`delete-track-${track.id}`}
-                    >
-                      <Trash />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-              */
             ))
           )}
         </div>

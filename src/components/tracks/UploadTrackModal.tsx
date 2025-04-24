@@ -1,4 +1,3 @@
-import { Track, useUploadTrackMutation } from '@/services/tracks';
 import { useForm } from '@tanstack/react-form';
 import { FC, useRef } from 'react';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
@@ -27,15 +26,19 @@ const uploadTrackSchema = z.object({
     .refine((v) => v.size < 50_000 * 1024, 'file too large'),
 });
 
+type SubmitData = z.infer<typeof uploadTrackSchema>;
+
 export const UploadTrackModal: FC<{
-  track: Track;
+  // track: Track;
   isOpen: boolean;
+  isLoading?: boolean;
+  onSubmit: (data: SubmitData) => void;
   onOpenChange: (isOpen: boolean) => void;
   onUploadSuccessful?: () => void;
-}> = ({ track, isOpen, onOpenChange, onUploadSuccessful }) => {
+}> = ({ isOpen, isLoading, onOpenChange, onSubmit }) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const uploadTrackMutation = useUploadTrackMutation();
+  // const uploadTrackMutation = useUploadTrackMutation();
 
   const form = useForm({
     defaultValues,
@@ -45,27 +48,30 @@ export const UploadTrackModal: FC<{
     onSubmit: async ({ value }) => {
       console.log(value);
       const v = uploadTrackSchema.parse(value);
-      await uploadTrackMutation.mutateAsync({ trackId: track.id, file: v.file });
-      onUploadSuccessful?.();
+      await onSubmit(v);
+      // await uploadTrackMutation.mutateAsync({ trackId: track.id, file: v.file });
+      // onUploadSuccessful?.();
     },
   });
 
+  const handleOpenChange = (open: boolean) => {
+    if (open) form.reset();
+    onOpenChange(open);
+  };
+
+  const handleSubmit = () => {
+    form.handleSubmit();
+  };
+
   return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={(open) => {
-        if (open) form.reset();
-        onOpenChange(open);
-      }}
-    >
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Upload track</DialogTitle>
         </DialogHeader>
 
-        <form.Field
-          name="file"
-          children={(field) => (
+        <form.Field name="file">
+          {(field) => (
             <div>
               <input
                 ref={inputRef}
@@ -81,10 +87,7 @@ export const UploadTrackModal: FC<{
                     <div className="flex items-center justify-between gap-4">
                       <span>{field.state.value.name}</span>
 
-                      <Button
-                        onClick={() => field.handleChange(null)}
-                        disabled={uploadTrackMutation.isPending}
-                      >
+                      <Button onClick={() => field.handleChange(null)} disabled={isLoading}>
                         <XIcon />
                       </Button>
                     </div>
@@ -95,7 +98,7 @@ export const UploadTrackModal: FC<{
                   onClick={() => {
                     inputRef.current?.click();
                   }}
-                  disabled={uploadTrackMutation.isPending}
+                  disabled={isLoading}
                 >
                   Select file
                 </Button>
@@ -108,15 +111,10 @@ export const UploadTrackModal: FC<{
               )}
             </div>
           )}
-        />
+        </form.Field>
 
         <DialogFooter>
-          <Button
-            onClick={() => {
-              form.handleSubmit();
-            }}
-            disabled={uploadTrackMutation.isPending}
-          >
+          <Button onClick={handleSubmit} isLoading={isLoading}>
             Save
           </Button>
         </DialogFooter>

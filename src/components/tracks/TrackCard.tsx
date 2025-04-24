@@ -1,75 +1,100 @@
 'use client';
 
-import { CreateTrackModal } from '@/components/tracks/CreateTrackModal';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
-  GetTracksListParams,
+  addUploadRequest,
+  deleteTracksRequest,
+  editTrackRequest,
+  removeUploadRequest,
   Track,
-  useDeleteTracksMutation,
-  useDeleteTrackUploadMutation,
-  useEditTrackMutation,
-  useGetTracksListQuery,
-  useUploadTrackMutation,
 } from '@/services/tracks';
-import { Edit, PlusIcon, Trash, Upload, XIcon } from 'lucide-react';
-import { FC, SyntheticEvent, useRef, useState } from 'react';
+import { Edit, Trash, Upload, XIcon } from 'lucide-react';
+import { FC, SyntheticEvent } from 'react';
 import { Card, CardContent } from '../ui/card';
 import { EditTrackModal } from './EditTrackModal';
 import { Badge } from '../ui/badge';
 import { env } from '@/core/env';
 import { UploadTrackModal } from './UploadTrackModal';
 import { ConfirmModal } from './ConfirmModal';
-import { LoadingSpinner } from '../ui/loading';
-import { PagePagination } from './Pagination';
-import { useDebouncedValue } from '@/hooks/use-debouce';
-import { TracksFilters } from './TracksFilters';
-import { Toggle } from '../ui/toggle';
 import { Collapsible, CollapsibleContent } from '../ui/collapsible';
-import { TracksSelection } from './TracksSelection';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { useModal } from '@/hooks/use-modal';
 
-const useModal = (unmountDelay = 1_000) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-  const unmountTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-
-  const toggle = (open: boolean) => {
-    if (open) {
-      setIsOpen(true);
-      setIsMounted(true);
-      clearTimeout(unmountTimeout.current);
-      unmountTimeout.current = undefined;
-    } else {
-      setIsOpen(false);
-      unmountTimeout.current = setTimeout(() => {
-        setIsMounted(false);
-      }, unmountDelay);
-    }
-  };
-
-  return {
-    isMounted,
-    isOpen,
-    toggle,
-  };
-};
-
-export const TrackCard: FC<{
+type Props = {
   track: Track;
   isSelectModeEnabled: boolean;
   isSelected: boolean;
   onSelectChange: (selected: boolean) => void;
   onPlay: (e: SyntheticEvent<HTMLAudioElement, Event>) => void;
-}> = ({ track, isSelectModeEnabled, isSelected, onSelectChange, onPlay }) => {
+};
+
+export const TrackCard: FC<Props> = ({
+  track,
+  isSelectModeEnabled,
+  isSelected,
+  onSelectChange,
+  onPlay,
+}) => {
+  const queryClient = useQueryClient();
+
   const editTrackModal = useModal();
   const addUploadModal = useModal();
   const removeUploadModal = useModal();
   const deleteTrackModal = useModal();
 
-  const editTrackMutation = useEditTrackMutation(track.id);
-  const addUploadMutation = useUploadTrackMutation(track.id);
-  const removeUploadMutation = useDeleteTrackUploadMutation(track.id);
-  const deleteTrackMutation = useDeleteTracksMutation(track.id);
+  const editTrackMutation = useMutation({
+    mutationFn: editTrackRequest,
+    onSuccess: () => {
+      toast('Track saved');
+      editTrackMutation.reset();
+      queryClient.invalidateQueries({ queryKey: ['all-tracks'] });
+      editTrackModal.toggle(false);
+    },
+    onError: () => {
+      toast('Track edit failed');
+    },
+  });
+
+  const addUploadMutation = useMutation({
+    mutationFn: addUploadRequest,
+    onSuccess: () => {
+      toast('Track upload added');
+      addUploadMutation.reset();
+      queryClient.invalidateQueries({ queryKey: ['all-tracks'] });
+      addUploadModal.toggle(false);
+    },
+    onError: () => {
+      toast('Upload failed');
+    },
+  });
+
+  const removeUploadMutation = useMutation({
+    mutationFn: removeUploadRequest,
+    onSuccess: () => {
+      toast('Track upload removed');
+      removeUploadMutation.reset();
+      queryClient.invalidateQueries({ queryKey: ['all-tracks'] });
+      removeUploadModal.toggle(false);
+    },
+    onError: () => {
+      toast('Removing upload failed');
+    },
+  });
+
+  const deleteTrackMutation = useMutation({
+    mutationFn: deleteTracksRequest,
+    onSuccess: () => {
+      toast('Track deleted');
+      deleteTrackMutation.reset();
+      queryClient.invalidateQueries({ queryKey: ['all-tracks'] });
+      deleteTrackModal.toggle(false);
+    },
+    onError: () => {
+      toast('track delete failed');
+    },
+  });
 
   return (
     <Card key={track.id} className="py-3" data-testid={`track-item-${track.id}`}>
@@ -159,10 +184,8 @@ export const TrackCard: FC<{
             isOpen={editTrackModal.isOpen}
             onOpenChange={editTrackModal.toggle}
             track={track}
-            onEditSuccessful={() => {
-              console.log('card: edit succ');
-              editTrackModal.toggle(false);
-            }}
+            isLoading={editTrackMutation.isPending}
+            onSubmit={(data) => editTrackMutation.mutate({ trackId: track.id, data })}
           />
         )}
 
@@ -170,29 +193,8 @@ export const TrackCard: FC<{
           <UploadTrackModal
             isOpen={addUploadModal.isOpen}
             onOpenChange={addUploadModal.toggle}
-            track={track}
-            onUploadSuccessful={async () => {
-              // refetch();
-              await new Promise((res) => setTimeout(res, 300));
-              addUploadModal.toggle(false);
-            }}
-          />
-        )}
-
-        {deleteTrackModal.isMounted && (
-          <ConfirmModal
-            isOpen={deleteTrackModal.isOpen}
-            onOpenChange={deleteTrackModal.toggle}
-            title="Delete track?"
-            onConfirm={() => {
-              deleteTrackMutation.mutate([track.id], {
-                onSuccess: () => {
-                  // refetch();
-                  deleteTrackModal.toggle(false);
-                },
-              });
-            }}
-            actionDisabled={deleteTrackMutation.isPending}
+            isLoading={addUploadMutation.isPending}
+            onSubmit={({ file }) => addUploadMutation.mutate({ trackId: track.id, file })}
           />
         )}
 
@@ -201,15 +203,18 @@ export const TrackCard: FC<{
             isOpen={removeUploadModal.isOpen}
             onOpenChange={removeUploadModal.toggle}
             title="Delete track audio file?"
-            onConfirm={() => {
-              removeUploadMutation.mutate(track.id, {
-                onSuccess: () => {
-                  // refetch();
-                  removeUploadModal.toggle(false);
-                },
-              });
-            }}
-            actionDisabled={removeUploadMutation.isPending}
+            isLoading={removeUploadMutation.isPending}
+            onConfirm={() => removeUploadMutation.mutate(track.id)}
+          />
+        )}
+
+        {deleteTrackModal.isMounted && (
+          <ConfirmModal
+            isOpen={deleteTrackModal.isOpen}
+            onOpenChange={deleteTrackModal.toggle}
+            title="Delete track?"
+            isLoading={deleteTrackMutation.isPending}
+            onConfirm={() => deleteTrackMutation.mutate([track.id])}
           />
         )}
       </CardContent>

@@ -2,14 +2,25 @@ import { FC } from 'react';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Button } from '../ui/button';
 
-export const ConfirmModal: FC<{
+type Props = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
+  isLoading?: boolean;
   title: string;
   actionText?: string;
   actionDisabled?: boolean;
-}> = ({ isOpen, onOpenChange, onConfirm, title, actionText = 'Confirm', actionDisabled }) => {
+};
+
+export const ConfirmModal: FC<Props> = ({
+  isOpen,
+  onOpenChange,
+  onConfirm,
+  title,
+  actionText = 'Confirm',
+  actionDisabled,
+  isLoading,
+}) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent data-testid="confirm-dialog">
@@ -30,6 +41,7 @@ export const ConfirmModal: FC<{
               onClick={() => onConfirm()}
               disabled={actionDisabled}
               data-testid="confirm-delete"
+              isLoading={isLoading}
             >
               {actionText}
             </Button>

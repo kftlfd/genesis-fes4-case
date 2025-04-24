@@ -1,19 +1,36 @@
+import { FC } from 'react';
 import {
   Pagination,
   PaginationContent,
-  // PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import { FC } from 'react';
 
-export const PagePagination: FC<{
+const MAX_BUTTONS = 5;
+
+const maxDirButtons = Math.floor(MAX_BUTTONS / 2);
+
+type Props = {
   curPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-}> = ({ curPage, totalPages, onPageChange }) => {
+};
+
+export const PagePagination: FC<Props> = ({ curPage, totalPages, onPageChange }) => {
+  const prevPages = Array.from(
+    { length: Math.min(curPage - 1, maxDirButtons) },
+    (_, i) => curPage - i - 1,
+  ).reverse();
+
+  const nextPages = Array.from(
+    { length: Math.min(totalPages - curPage, maxDirButtons) },
+    (_, i) => curPage + 1 + i,
+  );
+
+  const pages = [...prevPages, curPage, ...nextPages];
+
   return (
     <Pagination data-testid="pagination">
       <PaginationContent>
@@ -21,27 +38,13 @@ export const PagePagination: FC<{
           <PaginationPrevious href="#" data-testid="pagination-prev" />
         </PaginationItem>
 
-        {Array.from({ length: curPage - 1 }, (_, i) => i + 1).map((p) => (
+        {pages.map((p) => (
           <PaginationItem key={p} onClick={() => onPageChange(p)}>
-            <PaginationLink href="#">{p}</PaginationLink>
+            <PaginationLink href="#" isActive={p === curPage}>
+              {p}
+            </PaginationLink>
           </PaginationItem>
         ))}
-
-        <PaginationItem>
-          <PaginationLink href="#" isActive>
-            {curPage}
-          </PaginationLink>
-        </PaginationItem>
-
-        {Array.from({ length: totalPages - curPage }, (_, i) => curPage + 1 + i).map((p) => (
-          <PaginationItem key={p} onClick={() => onPageChange(p)}>
-            <PaginationLink href="#">{p}</PaginationLink>
-          </PaginationItem>
-        ))}
-
-        {/* <PaginationItem>
-          <PaginationEllipsis />
-        </PaginationItem> */}
 
         <PaginationItem onClick={() => onPageChange(Math.min(curPage + 1, totalPages))}>
           <PaginationNext href="#" data-testid="pagination-next" />
