@@ -120,16 +120,18 @@ export const TrackCreateEditForm: FC<{
         {(field) => (
           <>
             <Label>Genres</Label>
-            <GenresInput
-              value={field.state.value}
-              onChange={field.handleChange}
-              disabled={isLoading}
-            />
-            {field.state.meta.errors && (
-              <em data-testid="error-genre">
-                {field.state.meta.errors.map((e) => e?.message).join(', ')}
-              </em>
-            )}
+            <div>
+              <GenresInput
+                value={field.state.value}
+                onChange={field.handleChange}
+                disabled={isLoading}
+              />
+              {field.state.meta.errors && (
+                <em data-testid="error-genre">
+                  {field.state.meta.errors.map((e) => e?.message).join(', ')}
+                </em>
+              )}
+            </div>
           </>
         )}
       </form.Field>

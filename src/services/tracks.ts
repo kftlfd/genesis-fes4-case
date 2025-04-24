@@ -75,9 +75,9 @@ export const useGetTracksListQuery = (params?: TracksListFilters) =>
   });
 
 export const createEditTrackSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  artist: z.string().min(1, 'Artist is required'),
-  album: z.string(),
+  title: z.string().trim().min(1, 'Title is required'),
+  artist: z.string().trim().min(1, 'Artist is required'),
+  album: z.string().trim(),
   genres: z.array(z.string()),
   coverImage: z.string().url().or(z.literal('')),
 });
