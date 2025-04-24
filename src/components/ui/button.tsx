@@ -2,6 +2,7 @@ import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 
+import { DataAttrsProps } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 import { LoadingSpinner } from './loading';
@@ -47,7 +48,7 @@ function Button({
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean;
     isLoading?: boolean;
-  }) {
+  } & DataAttrsProps) {
   const Comp = asChild ? Slot : 'button';
   const isDisabled = props.disabled || isLoading;
 

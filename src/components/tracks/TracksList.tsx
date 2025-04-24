@@ -115,7 +115,7 @@ export const TracksListPage: FC = () => {
       <main>
         {isLoading ? (
           <div className="flex justify-center py-6">
-            <LoadingSpinner size={100} width={4} />
+            <LoadingSpinner size={100} width={4} data-testid="loading-indicator" />
           </div>
         ) : isError || !data ? (
           <h2>Error</h2>
@@ -144,7 +144,7 @@ export const TracksListPage: FC = () => {
 
               {isRefetching && (
                 <div className="absolute inset-0 grid place-content-center">
-                  <LoadingSpinner size={100} width={4} />
+                  <LoadingSpinner size={100} width={4} data-testid="loading-tracks" />
                 </div>
               )}
             </div>

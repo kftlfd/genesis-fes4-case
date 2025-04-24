@@ -213,6 +213,10 @@ export const TrackCard: FC<Props> = ({
             actionBtnProps={{
               variant: 'destructive',
               isLoading: removeUploadMutation.isPending,
+              'data-testid': 'confirm-delete',
+            }}
+            cancelBtnProps={{
+              'data-testid': 'cancel-delete',
             }}
           />
         )}
@@ -226,6 +230,10 @@ export const TrackCard: FC<Props> = ({
             actionBtnProps={{
               variant: 'destructive',
               isLoading: deleteTrackMutation.isPending,
+              'data-testid': 'confirm-delete',
+            }}
+            cancelBtnProps={{
+              'data-testid': 'cancel-delete',
             }}
           />
         )}

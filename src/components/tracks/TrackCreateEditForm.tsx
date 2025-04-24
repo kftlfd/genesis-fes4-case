@@ -36,7 +36,11 @@ export const TrackCreateEditForm: FC<{
   isLoading?: boolean;
 }> = ({ formControl: { form, handleSubmit }, isLoading }) => {
   return (
-    <form onSubmit={handleSubmit} className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-4">
+    <form
+      onSubmit={handleSubmit}
+      className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-4"
+      data-testid="track-form"
+    >
       <form.Field name="artist">
         {(field) => (
           <>
@@ -50,9 +54,12 @@ export const TrackCreateEditForm: FC<{
                 onChange={(e) => field.handleChange(e.target.value)}
                 placeholder="Artist"
                 disabled={isLoading}
+                data-testid="input-artist"
               />
               {field.state.meta.errors && (
-                <em>{field.state.meta.errors.map((e) => e?.message).join(', ')}</em>
+                <em data-testid="error-artist">
+                  {field.state.meta.errors.map((e) => e?.message).join(', ')}
+                </em>
               )}
             </div>
           </>
@@ -72,9 +79,12 @@ export const TrackCreateEditForm: FC<{
                 onChange={(e) => field.handleChange(e.target.value)}
                 placeholder="Title"
                 disabled={isLoading}
+                data-testid="input-title"
               />
               {field.state.meta.errors && (
-                <em>{field.state.meta.errors.map((e) => e?.message).join(', ')}</em>
+                <em data-testid="error-title">
+                  {field.state.meta.errors.map((e) => e?.message).join(', ')}
+                </em>
               )}
             </div>
           </>
@@ -94,9 +104,12 @@ export const TrackCreateEditForm: FC<{
                 onChange={(e) => field.handleChange(e.target.value)}
                 placeholder="Album"
                 disabled={isLoading}
+                data-testid="input-album"
               />
               {field.state.meta.errors && (
-                <em>{field.state.meta.errors.map((e) => e?.message).join(', ')}</em>
+                <em data-testid="error-album">
+                  {field.state.meta.errors.map((e) => e?.message).join(', ')}
+                </em>
               )}
             </div>
           </>
@@ -112,6 +125,11 @@ export const TrackCreateEditForm: FC<{
               onChange={field.handleChange}
               disabled={isLoading}
             />
+            {field.state.meta.errors && (
+              <em data-testid="error-genre">
+                {field.state.meta.errors.map((e) => e?.message).join(', ')}
+              </em>
+            )}
           </>
         )}
       </form.Field>
@@ -129,9 +147,12 @@ export const TrackCreateEditForm: FC<{
                 onChange={(e) => field.handleChange(e.target.value)}
                 placeholder="URL"
                 disabled={isLoading}
+                data-testid="input-cover-image"
               />
               {field.state.meta.errors && (
-                <em>{field.state.meta.errors.map((e) => e?.message).join(', ')}</em>
+                <em data-testid="error-cover-image">
+                  {field.state.meta.errors.map((e) => e?.message).join(', ')}
+                </em>
               )}
             </div>
           </>

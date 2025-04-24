@@ -2,8 +2,8 @@ import { FC } from 'react';
 
 import { TracksListPage } from '@/components/tracks/TracksList';
 
-const HomePage: FC = () => {
+const TracksPage: FC = () => {
   return <TracksListPage />;
 };
 
-export default HomePage;
+export default TracksPage;

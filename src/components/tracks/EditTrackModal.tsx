@@ -52,7 +52,11 @@ export const EditTrackModal: FC<Props> = ({ track, isOpen, onOpenChange, onSubmi
         <TrackCreateEditForm formControl={formControl} isLoading={isLoading} />
 
         <DialogFooter className="flex justify-end">
-          <Button onClick={() => formControl.handleSubmit()} isLoading={isLoading}>
+          <Button
+            onClick={() => formControl.handleSubmit()}
+            isLoading={isLoading}
+            data-testid="submit-button"
+          >
             Save
           </Button>
         </DialogFooter>
