@@ -11,7 +11,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
-import { env } from '@/core/env';
 import { useModal } from '@/hooks/use-modal';
 import {
   addTrackUploadRequest,
@@ -21,6 +20,7 @@ import {
   Track,
 } from '@/services/tracks';
 
+import { AudioVisualizer } from './AudioVisualizer';
 import { EditTrackModal } from './EditTrackModal';
 import { UploadTrackModal } from './UploadTrackModal';
 
@@ -38,7 +38,7 @@ export const TrackCard: FC<Props> = ({
   isSelectModeEnabled,
   isSelected,
   onSelectChange,
-  onPlay,
+  // onPlay,
   refreshPage,
 }) => {
   const queryClient = useQueryClient();
@@ -104,6 +104,8 @@ export const TrackCard: FC<Props> = ({
     },
   });
 
+  // const audioRef = useRef<HTMLAudioElement | null>(null);
+
   return (
     <Card key={track.id} className="py-3" data-testid={`track-item-${track.id}`}>
       <CardContent className="flex gap-2 px-3">
@@ -117,7 +119,7 @@ export const TrackCard: FC<Props> = ({
           </CollapsibleContent>
         </Collapsible>
 
-        <picture className="relative h-20 w-20">
+        <picture className="relative h-20 w-20 shrink-0">
           <source srcSet={track.coverImage} />
           <source srcSet="/track-cover-placeholder.webp" />
           <img
@@ -146,9 +148,17 @@ export const TrackCard: FC<Props> = ({
 
           {track.audioFile && (
             <div className="pt-2">
-              <audio className="w-full" controls onPlay={onPlay}>
+              {/* <audio
+                id={`audio-${track.id}`}
+                ref={audioRef}
+                className="w-full"
+                controls
+                onPlay={onPlay}
+                crossOrigin="anonymous"
+              >
                 <source src={`${env.API_URL}/api/files/${track.audioFile}`} />
-              </audio>
+              </audio> */}
+              <AudioVisualizer trackId={track.id} audioFile={track.audioFile} />
             </div>
           )}
         </div>
