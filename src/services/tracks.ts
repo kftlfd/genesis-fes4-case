@@ -29,24 +29,24 @@ const tracksListSchema = z.object({
 });
 
 const tracksListFiltersSchema = z.object({
-  page: z.number().optional(),
-  limit: z.number().optional(),
-  sort: z.enum(['title', 'artist', 'album', 'createdAt']).optional(),
-  order: z.enum(['asc', 'desc']).optional(),
-  search: z.string().optional(),
-  genre: z.string().optional(),
-  artist: z.string().optional(),
+  page: z.number().nullable(),
+  limit: z.number().nullable(),
+  sort: z.enum(['title', 'artist', 'album', 'createdAt']).nullable(),
+  order: z.enum(['asc', 'desc']).nullable(),
+  search: z.string().nullable(),
+  genre: z.string().nullable(),
+  artist: z.string().nullable(),
 });
 
 export type TracksListFilters = z.infer<typeof tracksListFiltersSchema>;
 
-const getTracksListRequest = async (filters: TracksListFilters = {}) => {
+const getTracksListRequest = async (filters: TracksListFilters) => {
   try {
     const parsedFilters = tracksListFiltersSchema.parse(filters);
 
     const searchParams = new URLSearchParams(
       Object.entries(parsedFilters).reduce((acc: [string, string][], [key, val]) => {
-        if (val !== undefined && val !== '') {
+        if (val) {
           acc.push([key, val.toString()]);
         }
         return acc;
@@ -64,7 +64,7 @@ const getTracksListRequest = async (filters: TracksListFilters = {}) => {
 
 export const TRACKS_LIST_QUERY_KEY = 'all-tracks';
 
-export const useGetTracksListQuery = (params?: TracksListFilters) =>
+export const useGetTracksListQuery = (params: TracksListFilters) =>
   useQuery({
     queryKey: [TRACKS_LIST_QUERY_KEY, params] as const,
     queryFn: ({ queryKey }) => {
