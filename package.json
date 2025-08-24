@@ -9,7 +9,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next build && next start",
-    "lint": "tsc -b && next lint",
+    "lint": "tsc -b && next lint && npm run format:check",
     "format:check": "prettier -c .",
     "format:write": "prettier -w ."
   },
