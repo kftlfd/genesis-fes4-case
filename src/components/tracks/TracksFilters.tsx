@@ -248,8 +248,8 @@ export const FiltersModal: FC<FiltersModalProps> = ({ isOpen, onOpenChange, onSa
             }
             onChange={(v) => updateFilter('sort', v as TracksListFilters['sort'])}
             triggerProps={{
-              id: 'sort-by',
-              className: 'w-full',
+              'id': 'sort-by',
+              'className': 'w-full',
               'data-testid': 'sort-select',
             }}
           />
@@ -261,8 +261,8 @@ export const FiltersModal: FC<FiltersModalProps> = ({ isOpen, onOpenChange, onSa
             options={genres.map((v) => [v, v])}
             onChange={(v) => updateFilter('genre', v)}
             triggerProps={{
-              id: 'genre',
-              className: 'w-full',
+              'id': 'genre',
+              'className': 'w-full',
               'data-testid': 'filter-genre',
             }}
           />

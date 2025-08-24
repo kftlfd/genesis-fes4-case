@@ -5,6 +5,7 @@ const config = {
   singleQuote: true,
   printWidth: 100,
   trailingComma: 'all',
+  quoteProps: 'consistent',
 };
 
 export default config;

@@ -218,8 +218,8 @@ export const TrackCard: FC<Props> = ({
             title="Delete track audio file?"
             onConfirm={() => removeUploadMutation.mutate(track.id)}
             actionBtnProps={{
-              variant: 'destructive',
-              isLoading: removeUploadMutation.isPending,
+              'variant': 'destructive',
+              'isLoading': removeUploadMutation.isPending,
               'data-testid': 'confirm-delete',
             }}
             cancelBtnProps={{
@@ -235,8 +235,8 @@ export const TrackCard: FC<Props> = ({
             title="Delete track?"
             onConfirm={() => deleteTrackMutation.mutate([track.id])}
             actionBtnProps={{
-              variant: 'destructive',
-              isLoading: deleteTrackMutation.isPending,
+              'variant': 'destructive',
+              'isLoading': deleteTrackMutation.isPending,
               'data-testid': 'confirm-delete',
             }}
             cancelBtnProps={{

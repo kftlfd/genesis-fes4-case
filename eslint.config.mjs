@@ -27,11 +27,11 @@ const eslintConfig = [
       'import/order': [
         'warn',
         {
-          alphabetize: {
+          'alphabetize': {
             order: 'asc',
             caseInsensitive: true,
           },
-          groups: [['builtin'], ['external'], ['internal'], ['parent', 'sibling', 'index']],
+          'groups': [['builtin'], ['external'], ['internal'], ['parent', 'sibling', 'index']],
           'newlines-between': 'always',
         },
       ],
