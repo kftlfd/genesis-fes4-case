@@ -30,6 +30,7 @@ type Props = {
   isSelected: boolean;
   onSelectChange: (selected: boolean) => void;
   onPlay: (e: SyntheticEvent<HTMLAudioElement, Event>) => void;
+  refreshPage?: () => void;
 };
 
 export const TrackCard: FC<Props> = ({
@@ -38,6 +39,7 @@ export const TrackCard: FC<Props> = ({
   isSelected,
   onSelectChange,
   onPlay,
+  refreshPage,
 }) => {
   const queryClient = useQueryClient();
 
@@ -53,6 +55,7 @@ export const TrackCard: FC<Props> = ({
       editTrackMutation.reset();
       queryClient.invalidateQueries({ queryKey: ['all-tracks'] });
       editTrackModal.toggle(false);
+      refreshPage?.();
     },
     onError: () => {
       toast('Track edit failed');
@@ -66,6 +69,7 @@ export const TrackCard: FC<Props> = ({
       addUploadMutation.reset();
       queryClient.invalidateQueries({ queryKey: ['all-tracks'] });
       addUploadModal.toggle(false);
+      refreshPage?.();
     },
     onError: () => {
       toast('Upload failed');
@@ -79,6 +83,7 @@ export const TrackCard: FC<Props> = ({
       removeUploadMutation.reset();
       queryClient.invalidateQueries({ queryKey: ['all-tracks'] });
       removeUploadModal.toggle(false);
+      refreshPage?.();
     },
     onError: () => {
       toast('Removing upload failed');
@@ -92,6 +97,7 @@ export const TrackCard: FC<Props> = ({
       deleteTrackMutation.reset();
       queryClient.invalidateQueries({ queryKey: ['all-tracks'] });
       deleteTrackModal.toggle(false);
+      refreshPage?.();
     },
     onError: () => {
       toast('track delete failed');
@@ -123,7 +129,8 @@ export const TrackCard: FC<Props> = ({
 
         <div className="grow">
           <div>
-            <span data-testid={`track-item-${track.id}-artist`}>{track.artist}</span>-
+            <span data-testid={`track-item-${track.id}-artist`}>{track.artist}</span>
+            {' - '}
             <span data-testid={`track-item-${track.id}-title`}>{track.title}</span>
           </div>
 

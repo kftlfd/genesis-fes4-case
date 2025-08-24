@@ -24,7 +24,7 @@ import {
 import { DataAttrsProps } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useGetGenresListQuery } from '@/services/genres';
-import { TracksListFilters } from '@/services/tracks';
+import { DEFAULT_FILTERS, TracksListFilters } from '@/services/tracks';
 
 const SelectFilter: FC<{
   value: string;
@@ -198,7 +198,7 @@ export const FiltersModal: FC<FiltersModalProps> = ({ isOpen, onOpenChange, onSa
 
   const { data: genres = [] } = useGetGenresListQuery();
 
-  const isSameAsInit = compare(curFilters, initFilters);
+  const isSameAsInit = compare(curFilters, DEFAULT_FILTERS);
   const isNotChanged = compare(curFilters, filters);
 
   const updateFilter = <K extends keyof TracksListFilters>(
@@ -217,7 +217,7 @@ export const FiltersModal: FC<FiltersModalProps> = ({ isOpen, onOpenChange, onSa
   };
 
   const handleReset = () => {
-    setCurFilters(initFilters);
+    setCurFilters(DEFAULT_FILTERS);
   };
 
   const handleSave = () => {

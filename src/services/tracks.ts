@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, QueryClient, useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 
 import { api } from '@/core/http';
@@ -28,19 +28,25 @@ const tracksListSchema = z.object({
   }),
 });
 
-const tracksListFiltersSchema = z.object({
-  page: z.number().nullable(),
-  limit: z.number().nullable(),
-  sort: z.enum(['title', 'artist', 'album', 'createdAt']).nullable(),
-  order: z.enum(['asc', 'desc']).nullable(),
-  search: z.string().nullable(),
-  genre: z.string().nullable(),
-  artist: z.string().nullable(),
+export type TracksListApiResponse = z.infer<typeof tracksListSchema>;
+
+export const tracksListFiltersSchema = z.object({
+  page: z.number().nullable().catch(1),
+  limit: z.number().nullable().catch(10),
+  sort: z.enum(['title', 'artist', 'album', 'createdAt']).nullable().catch(null),
+  order: z.enum(['asc', 'desc']).nullable().catch(null),
+  search: z.string().nullable().catch(null),
+  genre: z.string().nullable().catch(null),
+  artist: z.string().nullable().catch(null),
 });
 
 export type TracksListFilters = z.infer<typeof tracksListFiltersSchema>;
 
-const getTracksListRequest = async (filters: TracksListFilters) => {
+export const DEFAULT_FILTERS: TracksListFilters = tracksListFiltersSchema.parse({});
+
+export const getTracksListRequest = async (
+  filters: TracksListFilters,
+): Promise<TracksListApiResponse> => {
   try {
     const parsedFilters = tracksListFiltersSchema.parse(filters);
 
@@ -72,6 +78,15 @@ export const useGetTracksListQuery = (params: TracksListFilters) =>
       return getTracksListRequest(filters);
     },
     placeholderData: keepPreviousData,
+  });
+
+export const prefetchTracksListQuery = (qc: QueryClient, filters: TracksListFilters) =>
+  qc.prefetchQuery({
+    queryKey: [TRACKS_LIST_QUERY_KEY, filters] as const,
+    queryFn: ({ queryKey }) => {
+      const [, f] = queryKey;
+      return getTracksListRequest(f);
+    },
   });
 
 export const createEditTrackSchema = z.object({

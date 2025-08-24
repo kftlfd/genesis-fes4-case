@@ -2,7 +2,8 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { FilterIcon, PlusIcon, SquareMousePointer } from 'lucide-react';
-import { FC, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { FC, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { CreateTrackModal } from '@/components/tracks/CreateTrackModal';
@@ -15,7 +16,9 @@ import { cn } from '@/lib/utils';
 import {
   createTrackRequest,
   deleteTracksRequest,
+  TracksListApiResponse,
   TracksListFilters,
+  tracksListFiltersSchema,
   useGetTracksListQuery,
 } from '@/services/tracks';
 
@@ -25,27 +28,26 @@ import { FiltersModal } from './TracksFilters';
 import { TracksSelection, useTracksSelection } from './TracksSelection';
 import { Input } from '../ui/input';
 
-export const TracksListPage: FC = () => {
-  const [filters, setFilters] = useState<TracksListFilters>({
-    search: null,
-    sort: null,
-    order: null,
-    artist: null,
-    genre: null,
-    page: 1,
-    limit: 10,
-  });
-
-  const handleUpdateFilters = (f: TracksListFilters) => {
-    setFilters((prev) => ({ ...prev, ...f, page: 1 }));
+export const TracksListPage: FC<{
+  filters: TracksListFilters;
+  updateFilters: (filters: TracksListFilters) => void;
+  data?: TracksListApiResponse;
+  isLoading: boolean;
+  isRefetching: boolean;
+  isError: boolean;
+  refetch: () => void;
+  refreshPage?: () => void;
+}> = ({ filters, updateFilters, data, isLoading, isRefetching, isError, refetch, refreshPage }) => {
+  const handleUpdateFilter = <K extends keyof TracksListFilters>(
+    key: K,
+    value: TracksListFilters[K],
+  ) => {
+    updateFilters({ ...filters, [key]: value });
   };
 
-  const [debouncedSearch] = useDebouncedValue(filters.search, 500);
-
-  const { data, isLoading, isError, isRefetching, refetch } = useGetTracksListQuery({
-    ...filters,
-    search: debouncedSearch,
-  });
+  const handleUpdateFilters = (f: TracksListFilters) => {
+    updateFilters({ ...f, page: 1 });
+  };
 
   const filtersModal = useModal();
   const createTrackModal = useModal();
@@ -90,7 +92,7 @@ export const TracksListPage: FC = () => {
         <div className="flex gap-2">
           <Input
             value={filters.search ?? ''}
-            onChange={(e) => setFilters((p) => ({ ...p, search: e.target.value || null }))}
+            onChange={(e) => handleUpdateFilter('search', e.target.value || null)}
             placeholder="Search"
           />
 
@@ -174,6 +176,7 @@ export const TracksListPage: FC = () => {
                     if (e.currentTarget !== nowPlaying.current) nowPlaying.current?.pause();
                     nowPlaying.current = e.currentTarget;
                   }}
+                  refreshPage={refreshPage}
                 />
               ))}
 
@@ -188,12 +191,85 @@ export const TracksListPage: FC = () => {
               <PagePagination
                 curPage={filters.page ?? 1}
                 totalPages={data?.meta.totalPages ?? 0}
-                onPageChange={(p) => setFilters((prev) => ({ ...prev, page: p }))}
+                onPageChange={(p) => handleUpdateFilter('page', p)}
               />
             </div>
           </>
         )}
       </main>
     </div>
+  );
+};
+
+export const TracksListClientBased: FC<{
+  initFilters: TracksListFilters;
+}> = ({ initFilters }) => {
+  const [filters, setFilters] = useState(initFilters);
+
+  const updateFilters = (f: typeof filters) => {
+    setFilters(f);
+    const params = new URLSearchParams();
+    Object.entries(f).forEach(([k, v]) => {
+      if (v !== null) params.set(k, v.toString());
+    });
+    window.history.pushState({}, '', `?${params.toString()}`);
+  };
+
+  useEffect(() => {
+    window.addEventListener('hashchange', () => {
+      const params = new URLSearchParams(window.location.search);
+      const newF = tracksListFiltersSchema.parse(Object.fromEntries(params.entries()));
+      setFilters(newF);
+    });
+  }, []);
+
+  const [debouncedSearch] = useDebouncedValue(filters.search, 500);
+
+  const { data, isLoading, isError, isRefetching, refetch } = useGetTracksListQuery({
+    ...filters,
+    search: debouncedSearch,
+  });
+
+  return (
+    <TracksListPage
+      filters={filters}
+      updateFilters={updateFilters}
+      data={data}
+      isLoading={isLoading}
+      isRefetching={isRefetching}
+      isError={isError}
+      refetch={() => {
+        refetch().catch(console.error);
+      }}
+    />
+  );
+};
+
+export const TracksListRSCBased: FC<{
+  filters: TracksListFilters;
+  data?: TracksListApiResponse;
+  isError: boolean;
+}> = ({ filters, data, isError }) => {
+  const router = useRouter();
+
+  const setFilters = (f: Partial<TracksListFilters>) => {
+    const params = new URLSearchParams();
+    Object.entries({ ...filters, ...f }).forEach(([k, v]) => {
+      if (v !== null) params.set(k, v.toString());
+    });
+    router.push(`/tracks?${params.toString()}`);
+  };
+
+  return (
+    <TracksListPage
+      filters={filters}
+      updateFilters={setFilters}
+      data={data}
+      isLoading={false}
+      isRefetching={false}
+      isError={isError}
+      refetch={router.refresh}
+      refreshPage={router.refresh}
+    />
   );
 };
