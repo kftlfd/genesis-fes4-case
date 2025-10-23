@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Edit, Trash, Upload, XIcon } from 'lucide-react';
-import { FC, SyntheticEvent } from 'react';
+import { FC } from 'react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
@@ -20,8 +20,6 @@ import {
   Track,
 } from '@/services/tracks';
 
-// import { useNowPalying } from './AudioControls';
-// import { AudioVisualizer } from './AudioVisualizer';
 import { EditTrackModal } from './EditTrackModal';
 import { TrackCardPlayButton } from './TrackCardPlayButton';
 import { UploadTrackModal } from './UploadTrackModal';
@@ -31,7 +29,6 @@ type Props = {
   isSelectModeEnabled: boolean;
   isSelected: boolean;
   onSelectChange: (selected: boolean) => void;
-  onPlay: (e: SyntheticEvent<HTMLAudioElement, Event>) => void;
   refreshPage?: () => void;
 };
 
@@ -40,7 +37,6 @@ export const TrackCard: FC<Props> = ({
   isSelectModeEnabled,
   isSelected,
   onSelectChange,
-  // onPlay,
   refreshPage,
 }) => {
   const queryClient = useQueryClient();
@@ -106,10 +102,6 @@ export const TrackCard: FC<Props> = ({
     },
   });
 
-  // const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  // const { cur, setTrack } = useNowPalying();
-
   return (
     <Card key={track.id} className="py-3" data-testid={`track-item-${track.id}`}>
       <CardContent className="flex gap-2 px-3">
@@ -152,29 +144,6 @@ export const TrackCard: FC<Props> = ({
               </div>
             </div>
           )}
-
-          {/* {track.audioFile && (
-            <div className="pt-2">
-              {/* <audio
-                id={`audio-${track.id}`}
-                ref={audioRef}
-                className="w-full"
-                controls
-                onPlay={onPlay}
-                crossOrigin="anonymous"
-              >
-                <source src={`${env.API_URL}/api/files/${track.audioFile}`} />
-              </audio> */
-          /* <AudioVisualizer trackId={track.id} audioFile={track.audioFile} /> */
-          /* {cur?.id === track.id ? (
-                <button>Pause</button>
-              ) : (
-                <button onClick={() => setTrack({ id: track.id, src: track.audioFile })}>
-                  Play
-                </button>
-              )}
-            </div>
-          */}
         </div>
 
         <div className="flex gap-1">

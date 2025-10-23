@@ -3,7 +3,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { FilterIcon, PlusIcon, SquareMousePointer } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { CreateTrackModal } from '@/components/tracks/CreateTrackModal';
@@ -81,8 +81,6 @@ export const TracksListPage: FC<{
   const handleDeleteSelected = () => {
     deleteTracksMutation.mutate(selection.selectedIds);
   };
-
-  const nowPlaying = useRef<HTMLAudioElement | null>(null);
 
   return (
     <div className="container mx-auto px-4">
@@ -172,10 +170,6 @@ export const TracksListPage: FC<{
                   isSelectModeEnabled={selection.isSelectModeEnabled}
                   isSelected={selection.selectedIds.includes(track.id)}
                   onSelectChange={selection.handleSelectChange(track.id)}
-                  onPlay={(e) => {
-                    if (e.currentTarget !== nowPlaying.current) nowPlaying.current?.pause();
-                    nowPlaying.current = e.currentTarget;
-                  }}
                   refreshPage={refreshPage}
                 />
               ))}
