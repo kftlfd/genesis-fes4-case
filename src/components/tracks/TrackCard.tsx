@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Edit, Trash, Upload, XIcon } from 'lucide-react';
-import { FC, SyntheticEvent } from 'react';
+import { FC } from 'react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +11,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
-import { env } from '@/core/env';
 import { useModal } from '@/hooks/use-modal';
 import {
   addTrackUploadRequest,
@@ -22,6 +21,7 @@ import {
 } from '@/services/tracks';
 
 import { EditTrackModal } from './EditTrackModal';
+import { TrackCardPlayButton } from './TrackCardPlayButton';
 import { UploadTrackModal } from './UploadTrackModal';
 
 type Props = {
@@ -29,7 +29,6 @@ type Props = {
   isSelectModeEnabled: boolean;
   isSelected: boolean;
   onSelectChange: (selected: boolean) => void;
-  onPlay: (e: SyntheticEvent<HTMLAudioElement, Event>) => void;
   refreshPage?: () => void;
 };
 
@@ -38,7 +37,6 @@ export const TrackCard: FC<Props> = ({
   isSelectModeEnabled,
   isSelected,
   onSelectChange,
-  onPlay,
   refreshPage,
 }) => {
   const queryClient = useQueryClient();
@@ -117,7 +115,7 @@ export const TrackCard: FC<Props> = ({
           </CollapsibleContent>
         </Collapsible>
 
-        <picture className="relative h-20 w-20">
+        <picture className="relative h-20 w-20 shrink-0">
           <source srcSet={track.coverImage} />
           <source srcSet="/track-cover-placeholder.webp" />
           <img
@@ -125,9 +123,10 @@ export const TrackCard: FC<Props> = ({
             alt={`${track.artist} - ${track.title}`}
             title={`${track.artist} - ${track.title}`}
           />
+          {track.audioFile && <TrackCardPlayButton id={track.id} src={track.audioFile} />}
         </picture>
 
-        <div className="grow">
+        <div className="flex grow flex-col">
           <div>
             <span data-testid={`track-item-${track.id}-artist`}>{track.artist}</span>
             {' - '}
@@ -137,18 +136,12 @@ export const TrackCard: FC<Props> = ({
           <div>{track.album}</div>
 
           {track.genres.length > 0 && (
-            <div className="flex gap-1 pt-2">
-              {track.genres.map((g) => (
-                <Badge key={g}>{g}</Badge>
-              ))}
-            </div>
-          )}
-
-          {track.audioFile && (
-            <div className="pt-2">
-              <audio className="w-full" controls onPlay={onPlay}>
-                <source src={`${env.API_URL}/api/files/${track.audioFile}`} />
-              </audio>
+            <div className="flex grow flex-col justify-end">
+              <div className="flex gap-1 pt-2">
+                {track.genres.map((g) => (
+                  <Badge key={g}>{g}</Badge>
+                ))}
+              </div>
             </div>
           )}
         </div>
