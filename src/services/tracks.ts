@@ -31,8 +31,8 @@ const tracksListSchema = z.object({
 export type TracksListApiResponse = z.infer<typeof tracksListSchema>;
 
 export const tracksListFiltersSchema = z.object({
-  page: z.number().nullable().catch(1),
-  limit: z.number().nullable().catch(10),
+  page: z.coerce.number().nullable().catch(1),
+  limit: z.coerce.number().nullable().catch(10),
   sort: z.enum(['title', 'artist', 'album', 'createdAt']).nullable().catch(null),
   order: z.enum(['asc', 'desc']).nullable().catch(null),
   search: z.string().nullable().catch(null),
