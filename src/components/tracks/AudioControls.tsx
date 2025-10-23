@@ -1,11 +1,11 @@
 'use client';
 
 import { AudioMotionAnalyzer } from 'audiomotion-analyzer';
-import { FC, useEffect, useRef } from 'react';
-import { create } from 'zustand';
+import { XIcon } from 'lucide-react';
+import { createContext, FC, ReactNode, useContext, useEffect, useRef } from 'react';
+import { useStore, createStore, StoreApi } from 'zustand';
 
 import { env } from '@/core/env';
-import { cn } from '@/lib/utils';
 
 type NowPalyingTrack = {
   id: string;
@@ -14,33 +14,51 @@ type NowPalyingTrack = {
 
 type NowPlayingStore = {
   cur: NowPalyingTrack | null;
+  isPlaying: boolean;
   setTrack: (track: NowPalyingTrack) => void;
   clearTrack: () => void;
+  play: () => void;
+  pause: () => void;
 };
 
 const getTrackSrc = (filename: string) => `${env.API_URL}/api/files/${filename}`;
 
-export const useNowPalying = create<NowPlayingStore>((set) => ({
-  cur: null,
-  setTrack: (track) => set({ cur: { id: track.id, src: getTrackSrc(track.src) } }),
-  clearTrack: () => set({ cur: null }),
-}));
+const AudioControlsCtx = createContext<StoreApi<NowPlayingStore> | null>(null);
 
-export const AudioControls: FC = () => {
-  const { cur, clearTrack } = useNowPalying();
+export const useNowPlaying = () => {
+  const ctx = useContext(AudioControlsCtx);
+  if (!ctx) {
+    throw new Error('AudioControls context not found');
+  }
+  return useStore(ctx);
+};
 
+export const AudioControls: FC<{
+  children?: ReactNode;
+}> = ({ children }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const visualizerRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    if (!cur?.id) return;
+  const store = useRef(
+    createStore<NowPlayingStore>((set) => ({
+      cur: null,
+      isPlaying: false,
+      setTrack: (track) =>
+        set({
+          cur: { id: track.id, src: getTrackSrc(track.src) },
+        }),
+      clearTrack: () => set({ cur: null }),
+      play: () => set({ isPlaying: true }),
+      pause: () => set({ isPlaying: false }),
+    })),
+  );
 
+  const { cur, clearTrack, isPlaying } = useStore(store.current);
+
+  useEffect(() => {
     const audioEl = audioRef.current;
     const visualizerEl = visualizerRef.current;
-
-    if (!audioEl || !visualizerEl) return;
-
-    audioEl.play();
+    if (!cur || !audioEl || !visualizerEl) return;
 
     const analyzer = new AudioMotionAnalyzer(visualizerEl, {
       source: audioEl,
@@ -49,16 +67,24 @@ export const AudioControls: FC = () => {
     return () => {
       analyzer.destroy();
     };
-  }, [cur?.id]);
+  }, [cur]);
+
+  useEffect(() => {
+    const audioEl = audioRef.current;
+    if (!cur || !audioEl) return;
+
+    if (isPlaying) {
+      audioEl.play();
+    } else {
+      audioEl.pause();
+    }
+  }, [cur, isPlaying]);
 
   return (
-    <div
-      className={cn(
-        cur ? 'sticky bottom-0 h-60 border-t-2 border-t-gray-600 bg-white p-4' : 'hidden',
-      )}
-    >
-      {cur ? (
-        <div className="flex items-start">
+    <AudioControlsCtx value={store.current}>
+      {children}
+      {cur && (
+        <div className="sticky bottom-0 flex h-60 items-start gap-4 border-t-2 border-t-gray-600 bg-white p-4">
           <div className="grow">
             <audio
               key={cur.id}
@@ -71,12 +97,15 @@ export const AudioControls: FC = () => {
             <div ref={visualizerRef} />
           </div>
           <div className="shrink-0">
-            <button onClick={clearTrack}>X</button>
+            <button
+              onClick={clearTrack}
+              className="cursor-pointer rounded-md border-2 border-gray-600"
+            >
+              <XIcon />
+            </button>
           </div>
         </div>
-      ) : (
-        <div>Audio controls</div>
       )}
-    </div>
+    </AudioControlsCtx>
   );
 };

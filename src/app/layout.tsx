@@ -29,8 +29,7 @@ const RootLayout: FC<{
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <QueryClientProvider>
-          {children}
-          <AudioControls />
+          <AudioControls>{children}</AudioControls>
         </QueryClientProvider>
         <Toaster position="top-right" data-testid="toast-container" />
       </body>
