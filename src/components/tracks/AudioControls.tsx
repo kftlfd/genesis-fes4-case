@@ -1,11 +1,12 @@
 'use client';
 
-import { AudioMotionAnalyzer } from 'audiomotion-analyzer';
-import { XIcon } from 'lucide-react';
-import { FC, ReactNode, useEffect, useRef } from 'react';
+import { PauseIcon, PlayIcon, XIcon } from 'lucide-react';
+import { FC, useEffect, useState } from 'react';
 import { create } from 'zustand';
 
+import { Input } from '@/components/ui/input';
 import { env } from '@/core/env';
+import { formatTime } from '@/lib/utils';
 
 type NowPalyingTrack = {
   id: string;
@@ -13,6 +14,7 @@ type NowPalyingTrack = {
 };
 
 type NowPlayingStore = {
+  audio: HTMLAudioElement | null;
   cur: NowPalyingTrack | null;
   isPlaying: boolean;
   setTrack: (track: NowPalyingTrack) => void;
@@ -24,78 +26,93 @@ type NowPlayingStore = {
 const getTrackSrc = (filename: string) => `${env.API_URL}/api/files/${filename}`;
 
 export const useNowPlaying = create<NowPlayingStore>((set) => ({
+  audio: null,
   cur: null,
   isPlaying: false,
   setTrack: (track) =>
-    set({
-      cur: { id: track.id, src: getTrackSrc(track.src) },
+    set(({ audio }) => {
+      audio?.pause();
+      return {
+        cur: { id: track.id, src: getTrackSrc(track.src) },
+        audio: new Audio(getTrackSrc(track.src)),
+      };
     }),
-  clearTrack: () => set({ cur: null }),
-  play: () => set({ isPlaying: true }),
-  pause: () => set({ isPlaying: false }),
+  clearTrack: () =>
+    set(({ audio }) => {
+      audio?.pause();
+      return { cur: null, audio: null };
+    }),
+  play: () =>
+    set(({ audio }) => {
+      audio?.play();
+      return { isPlaying: true };
+    }),
+  pause: () =>
+    set(({ audio }) => {
+      audio?.pause();
+      return { isPlaying: false };
+    }),
 }));
 
-export const AudioControls: FC<{
-  children?: ReactNode;
-}> = ({ children }) => {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const visualizerRef = useRef<HTMLDivElement | null>(null);
+export const AudioControls: FC = () => {
+  const { audio, cur, clearTrack, isPlaying, play, pause } = useNowPlaying();
 
-  const { cur, clearTrack, isPlaying } = useNowPlaying();
+  const [duration, setDuration] = useState(0);
+  const [progr, setProgr] = useState(0);
+
+  const handleSeek = (val: number) => {
+    if (!audio) return;
+    audio.currentTime = val;
+    setProgr(val);
+  };
 
   useEffect(() => {
-    const audioEl = audioRef.current;
-    const visualizerEl = visualizerRef.current;
-    if (!cur || !audioEl || !visualizerEl) return;
+    if (!audio) return;
 
-    const analyzer = new AudioMotionAnalyzer(visualizerEl, {
-      source: audioEl,
-    });
+    const onProgrChange = () => {
+      setProgr(audio.currentTime);
+      setDuration(audio.duration);
+    };
+
+    audio.addEventListener('timeupdate', onProgrChange);
 
     return () => {
-      analyzer.destroy();
+      audio.removeEventListener('timeupdate', onProgrChange);
     };
-  }, [cur]);
+  }, [audio]);
 
-  useEffect(() => {
-    const audioEl = audioRef.current;
-    if (!cur || !audioEl) return;
-
-    if (isPlaying) {
-      audioEl.play();
-    } else {
-      audioEl.pause();
-    }
-  }, [cur, isPlaying]);
+  if (!cur) {
+    return null;
+  }
 
   return (
-    <>
-      {children}
-
-      {cur && (
-        <div className="sticky bottom-0 flex h-60 items-start gap-4 border-t-2 border-t-gray-600 bg-white p-4">
-          <div className="grow">
-            <audio
-              key={cur.id}
-              ref={audioRef}
-              src={cur.src}
-              controls
-              crossOrigin="anonymous"
-              className="w-full"
-            />
-            <div ref={visualizerRef} />
-          </div>
-
-          <div className="shrink-0">
-            <button
-              onClick={clearTrack}
-              className="cursor-pointer rounded-md border-2 border-gray-600"
-            >
-              <XIcon />
-            </button>
-          </div>
-        </div>
-      )}
-    </>
+    <div className="sticky bottom-0 flex grow items-center gap-4 border-t-2 border-t-gray-600 bg-white p-8">
+      <button
+        className="cursor-pointer"
+        onClick={() => {
+          if (isPlaying) {
+            pause();
+          } else {
+            play();
+          }
+        }}
+      >
+        {isPlaying ? <PauseIcon height={50} width={50} /> : <PlayIcon height={50} width={50} />}
+      </button>
+      <Input
+        className="px-0"
+        type="range"
+        min={0}
+        max={duration}
+        value={progr}
+        onChange={(e) => handleSeek(Number(e.target.value))}
+      />
+      <div className="whitespace-nowrap">
+        {formatTime(progr)} / {formatTime(duration)}
+      </div>
+      <button onClick={clearTrack} className="cursor-pointer">
+        <XIcon height={30} width={30} />
+      </button>
+    </div>
   );
 };
