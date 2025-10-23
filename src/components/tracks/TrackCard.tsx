@@ -20,8 +20,10 @@ import {
   Track,
 } from '@/services/tracks';
 
-import { AudioVisualizer } from './AudioVisualizer';
+// import { useNowPalying } from './AudioControls';
+// import { AudioVisualizer } from './AudioVisualizer';
 import { EditTrackModal } from './EditTrackModal';
+import { TrackCardPlayButton } from './TrackCardPlayButton';
 import { UploadTrackModal } from './UploadTrackModal';
 
 type Props = {
@@ -106,6 +108,8 @@ export const TrackCard: FC<Props> = ({
 
   // const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // const { cur, setTrack } = useNowPalying();
+
   return (
     <Card key={track.id} className="py-3" data-testid={`track-item-${track.id}`}>
       <CardContent className="flex gap-2 px-3">
@@ -127,9 +131,10 @@ export const TrackCard: FC<Props> = ({
             alt={`${track.artist} - ${track.title}`}
             title={`${track.artist} - ${track.title}`}
           />
+          {track.audioFile && <TrackCardPlayButton id={track.id} src={track.audioFile} />}
         </picture>
 
-        <div className="grow">
+        <div className="flex grow flex-col">
           <div>
             <span data-testid={`track-item-${track.id}-artist`}>{track.artist}</span>
             {' - '}
@@ -139,14 +144,16 @@ export const TrackCard: FC<Props> = ({
           <div>{track.album}</div>
 
           {track.genres.length > 0 && (
-            <div className="flex gap-1 pt-2">
-              {track.genres.map((g) => (
-                <Badge key={g}>{g}</Badge>
-              ))}
+            <div className="flex grow flex-col justify-end">
+              <div className="flex gap-1 pt-2">
+                {track.genres.map((g) => (
+                  <Badge key={g}>{g}</Badge>
+                ))}
+              </div>
             </div>
           )}
 
-          {track.audioFile && (
+          {/* {track.audioFile && (
             <div className="pt-2">
               {/* <audio
                 id={`audio-${track.id}`}
@@ -157,10 +164,17 @@ export const TrackCard: FC<Props> = ({
                 crossOrigin="anonymous"
               >
                 <source src={`${env.API_URL}/api/files/${track.audioFile}`} />
-              </audio> */}
-              <AudioVisualizer trackId={track.id} audioFile={track.audioFile} />
+              </audio> */
+          /* <AudioVisualizer trackId={track.id} audioFile={track.audioFile} /> */
+          /* {cur?.id === track.id ? (
+                <button>Pause</button>
+              ) : (
+                <button onClick={() => setTrack({ id: track.id, src: track.audioFile })}>
+                  Play
+                </button>
+              )}
             </div>
-          )}
+          */}
         </div>
 
         <div className="flex gap-1">

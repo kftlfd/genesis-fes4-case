@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import { FC } from 'react';
 
 import './globals.css';
+import { AudioControls } from '@/components/tracks/AudioControls';
 import { Toaster } from '@/components/ui/sonner';
 import { QueryClientProvider } from '@/core/queryClientProvider';
 
@@ -27,7 +28,10 @@ const RootLayout: FC<{
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <QueryClientProvider>{children}</QueryClientProvider>
+        <QueryClientProvider>
+          {children}
+          <AudioControls />
+        </QueryClientProvider>
         <Toaster position="top-right" data-testid="toast-container" />
       </body>
     </html>
