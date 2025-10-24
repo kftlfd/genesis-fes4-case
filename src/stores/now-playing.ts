@@ -21,8 +21,11 @@ const getTrackSrc = (filename: string) => `${env.API_URL}/api/files/${filename}`
 
 export const useNowPlaying = create<NowPlayingStore>((set) => ({
   audio: null,
+
   cur: null,
+
   isPlaying: false,
+
   setTrack: (track) =>
     set(({ audio }) => {
       audio?.pause();
@@ -33,16 +36,19 @@ export const useNowPlaying = create<NowPlayingStore>((set) => ({
         audio: newAudio,
       };
     }),
+
   clearTrack: () =>
     set(({ audio }) => {
       audio?.pause();
       return { cur: null, audio: null };
     }),
+
   play: () =>
     set(({ audio }) => {
       audio?.play();
       return { isPlaying: true };
     }),
+
   pause: () =>
     set(({ audio }) => {
       audio?.pause();

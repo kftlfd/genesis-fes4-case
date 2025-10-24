@@ -17,15 +17,15 @@ import {
   deleteTracksRequest,
   editTrackRequest,
   removeTrackUploadRequest,
-  Track,
 } from '@/services/tracks';
+import { useAllTracks } from '@/stores/all-tracks';
 
 import { EditTrackModal } from './EditTrackModal';
 import { TrackCardPlayButton } from './TrackCardPlayButton';
 import { UploadTrackModal } from './UploadTrackModal';
 
 type Props = {
-  track: Track;
+  trackId: string;
   isSelectModeEnabled: boolean;
   isSelected: boolean;
   onSelectChange: (selected: boolean) => void;
@@ -33,12 +33,14 @@ type Props = {
 };
 
 export const TrackCard: FC<Props> = ({
-  track,
+  trackId,
   isSelectModeEnabled,
   isSelected,
   onSelectChange,
   refreshPage,
 }) => {
+  const track = useAllTracks(({ data }) => data.get(trackId));
+
   const queryClient = useQueryClient();
 
   const editTrackModal = useModal();
@@ -101,6 +103,11 @@ export const TrackCard: FC<Props> = ({
       toast('track delete failed');
     },
   });
+
+  if (!track) {
+    console.warn(`track with id "${trackId}" not found`);
+    return null;
+  }
 
   return (
     <Card key={track.id} className="py-3" data-testid={`track-item-${track.id}`}>
