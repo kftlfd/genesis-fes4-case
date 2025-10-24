@@ -23,6 +23,7 @@ import {
 } from '@/services/tracks';
 import { AllTracksStoreProvider } from '@/stores/all-tracks';
 
+import { AudioControls } from './AudioControls';
 import { PagePagination } from './Pagination';
 import { TrackCard } from './TrackCard';
 import { FiltersModal } from './TracksFilters';
@@ -238,6 +239,7 @@ export const TracksListClientBased: FC<{
           refetch().catch(console.error);
         }}
       />
+      <AudioControls />
     </AllTracksStoreProvider>
   );
 };
@@ -269,6 +271,7 @@ export const TracksListRSCBased: FC<{
         refetch={router.refresh}
         refreshPage={router.refresh}
       />
+      <AudioControls />
     </AllTracksStoreProvider>
   );
 };
