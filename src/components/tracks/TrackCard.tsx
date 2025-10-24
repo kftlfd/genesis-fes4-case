@@ -18,7 +18,7 @@ import {
   editTrackRequest,
   removeTrackUploadRequest,
 } from '@/services/tracks';
-import { useAllTracks } from '@/stores/all-tracks';
+import { useAllTracks, useAllTracksActions } from '@/stores/all-tracks';
 
 import { EditTrackModal } from './EditTrackModal';
 import { TrackCardPlayButton } from './TrackCardPlayButton';
@@ -40,6 +40,7 @@ export const TrackCard: FC<Props> = ({
   refreshPage,
 }) => {
   const track = useAllTracks(({ data }) => data.get(trackId));
+  const { editTrack } = useAllTracksActions();
 
   const queryClient = useQueryClient();
 
@@ -50,15 +51,24 @@ export const TrackCard: FC<Props> = ({
 
   const editTrackMutation = useMutation({
     mutationFn: editTrackRequest,
+    onMutate: (vars) => {
+      const curTrack = track ? { ...track } : null;
+      editTrack(trackId, vars.data);
+      editTrackModal.toggle(false);
+      return curTrack;
+    },
     onSuccess: () => {
       toast('Track saved');
       editTrackMutation.reset();
-      queryClient.invalidateQueries({ queryKey: ['all-tracks'] });
-      editTrackModal.toggle(false);
-      refreshPage?.();
+      // queryClient.invalidateQueries({ queryKey: ['all-tracks'] });
+      // editTrackModal.toggle(false);
+      // refreshPage?.();
     },
-    onError: () => {
+    onError: (err, vars, prev) => {
       toast('Track edit failed');
+      if (prev) {
+        editTrack(trackId, prev);
+      }
     },
   });
 
