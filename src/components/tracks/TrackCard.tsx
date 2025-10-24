@@ -17,15 +17,16 @@ import {
   deleteTracksRequest,
   editTrackRequest,
   removeTrackUploadRequest,
-  Track,
 } from '@/services/tracks';
+import { useAllTracks, useAllTracksActions } from '@/stores/all-tracks';
+import { useNowPlaying } from '@/stores/now-playing';
 
 import { EditTrackModal } from './EditTrackModal';
 import { TrackCardPlayButton } from './TrackCardPlayButton';
 import { UploadTrackModal } from './UploadTrackModal';
 
 type Props = {
-  track: Track;
+  trackId: string;
   isSelectModeEnabled: boolean;
   isSelected: boolean;
   onSelectChange: (selected: boolean) => void;
@@ -33,12 +34,16 @@ type Props = {
 };
 
 export const TrackCard: FC<Props> = ({
-  track,
+  trackId,
   isSelectModeEnabled,
   isSelected,
   onSelectChange,
   refreshPage,
 }) => {
+  const track = useAllTracks(({ data }) => data.get(trackId));
+  const { addTracks, editTrack, removeTrack } = useAllTracksActions();
+  const { cur, clearTrack } = useNowPlaying();
+
   const queryClient = useQueryClient();
 
   const editTrackModal = useModal();
@@ -48,15 +53,24 @@ export const TrackCard: FC<Props> = ({
 
   const editTrackMutation = useMutation({
     mutationFn: editTrackRequest,
+    onMutate: (vars) => {
+      const curTrack = track ? { ...track } : null;
+      editTrack(trackId, vars.data);
+      editTrackModal.toggle(false);
+      return curTrack;
+    },
     onSuccess: () => {
       toast('Track saved');
       editTrackMutation.reset();
-      queryClient.invalidateQueries({ queryKey: ['all-tracks'] });
-      editTrackModal.toggle(false);
-      refreshPage?.();
+      // queryClient.invalidateQueries({ queryKey: ['all-tracks'] });
+      // editTrackModal.toggle(false);
+      // refreshPage?.();
     },
-    onError: () => {
+    onError: (err, vars, prev) => {
       toast('Track edit failed');
+      if (prev) {
+        editTrack(trackId, prev);
+      }
     },
   });
 
@@ -76,31 +90,58 @@ export const TrackCard: FC<Props> = ({
 
   const removeUploadMutation = useMutation({
     mutationFn: removeTrackUploadRequest,
+    onMutate: () => {
+      const curAudiofile = track?.audioFile;
+      editTrack(trackId, { audioFile: undefined });
+      removeUploadModal.toggle(false);
+      if (cur?.id === trackId) {
+        clearTrack();
+      }
+      return curAudiofile;
+    },
     onSuccess: () => {
       toast('Track upload removed');
       removeUploadMutation.reset();
-      queryClient.invalidateQueries({ queryKey: ['all-tracks'] });
-      removeUploadModal.toggle(false);
-      refreshPage?.();
+      // queryClient.invalidateQueries({ queryKey: ['all-tracks'] });
+      // removeUploadModal.toggle(false);
+      // refreshPage?.();
     },
-    onError: () => {
+    onError: (err, vars, prevAudiofile) => {
       toast('Removing upload failed');
+      editTrack(trackId, { audioFile: prevAudiofile });
     },
   });
 
   const deleteTrackMutation = useMutation({
     mutationFn: deleteTracksRequest,
+    onMutate: () => {
+      const prev = track ? { ...track } : null;
+      removeTrack(trackId);
+      deleteTrackModal.toggle(false);
+      if (cur?.id === trackId) {
+        clearTrack();
+      }
+      return prev;
+    },
     onSuccess: () => {
       toast('Track deleted');
       deleteTrackMutation.reset();
-      queryClient.invalidateQueries({ queryKey: ['all-tracks'] });
-      deleteTrackModal.toggle(false);
-      refreshPage?.();
+      // queryClient.invalidateQueries({ queryKey: ['all-tracks'] });
+      // deleteTrackModal.toggle(false);
+      // refreshPage?.();
     },
-    onError: () => {
+    onError: (err, vars, prev) => {
       toast('track delete failed');
+      if (prev) {
+        addTracks([prev]);
+      }
     },
   });
+
+  if (!track) {
+    // console.warn(`track with id "${trackId}" not found`);
+    return null;
+  }
 
   return (
     <Card key={track.id} className="py-3" data-testid={`track-item-${track.id}`}>

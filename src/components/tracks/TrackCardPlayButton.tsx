@@ -1,7 +1,7 @@
 import { PauseIcon, PlayIcon } from 'lucide-react';
 import { FC } from 'react';
 
-import { useNowPlaying } from './AudioControls';
+import { useNowPlaying } from '@/stores/now-playing';
 
 export const TrackCardPlayButton: FC<{
   id: string;

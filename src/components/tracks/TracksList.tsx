@@ -21,7 +21,9 @@ import {
   tracksListFiltersSchema,
   useGetTracksListQuery,
 } from '@/services/tracks';
+import { AllTracksStoreProvider } from '@/stores/all-tracks';
 
+import { AudioControls } from './AudioControls';
 import { PagePagination } from './Pagination';
 import { TrackCard } from './TrackCard';
 import { FiltersModal } from './TracksFilters';
@@ -166,7 +168,7 @@ export const TracksListPage: FC<{
               {data.data.map((track) => (
                 <TrackCard
                   key={track.id}
-                  track={track}
+                  trackId={track.id}
                   isSelectModeEnabled={selection.isSelectModeEnabled}
                   isSelected={selection.selectedIds.includes(track.id)}
                   onSelectChange={selection.handleSelectChange(track.id)}
@@ -225,17 +227,20 @@ export const TracksListClientBased: FC<{
   });
 
   return (
-    <TracksListPage
-      filters={filters}
-      updateFilters={updateFilters}
-      data={data}
-      isLoading={isLoading}
-      isRefetching={isRefetching}
-      isError={isError}
-      refetch={() => {
-        refetch().catch(console.error);
-      }}
-    />
+    <AllTracksStoreProvider tracks={data?.data ?? null}>
+      <TracksListPage
+        filters={filters}
+        updateFilters={updateFilters}
+        data={data}
+        isLoading={isLoading}
+        isRefetching={isRefetching}
+        isError={isError}
+        refetch={() => {
+          refetch().catch(console.error);
+        }}
+      />
+      <AudioControls />
+    </AllTracksStoreProvider>
   );
 };
 
@@ -255,15 +260,18 @@ export const TracksListRSCBased: FC<{
   };
 
   return (
-    <TracksListPage
-      filters={filters}
-      updateFilters={setFilters}
-      data={data}
-      isLoading={false}
-      isRefetching={false}
-      isError={isError}
-      refetch={router.refresh}
-      refreshPage={router.refresh}
-    />
+    <AllTracksStoreProvider tracks={data?.data ?? null}>
+      <TracksListPage
+        filters={filters}
+        updateFilters={setFilters}
+        data={data}
+        isLoading={false}
+        isRefetching={false}
+        isError={isError}
+        refetch={router.refresh}
+        refreshPage={router.refresh}
+      />
+      <AudioControls />
+    </AllTracksStoreProvider>
   );
 };
