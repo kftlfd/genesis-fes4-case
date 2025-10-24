@@ -40,5 +40,5 @@ npm run start
 ## Extra Tasks done (optional)
 
 - [x] Implement bulk delete functionality (select multiple or all tracks and delete them).
-- [ ] Implement optimistic updates to reflect changes in the UI before they are confirmed by the server.
+- [x] Implement optimistic updates to reflect changes in the UI before they are confirmed by the server. -- only for editing tracks, removing uploads, and deleting tracks (create track and add upload still require server confirmation)
 - [x] Add visualization for the audiowave of currently played track.
