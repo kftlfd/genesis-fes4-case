@@ -6,9 +6,9 @@ import {
   ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
-  useState,
 } from 'react';
 import { createStore, useStore } from 'zustand';
 
@@ -90,11 +90,11 @@ export const AllTracksStoreProvider: FC<{
     [store],
   );
 
-  const [prev, setPrev] = useState(tracks);
-  if (tracks !== prev && !!tracks) {
-    setPrev(tracks);
-    addTracks(tracks);
-  }
+  useEffect(() => {
+    if (tracks) {
+      addTracks(tracks);
+    }
+  }, [tracks, addTracks]);
 
   const actions = useMemo<AllTracksActions>(
     () => ({ addTracks, editTrack, removeTrack }),
