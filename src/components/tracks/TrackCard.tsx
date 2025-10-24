@@ -19,6 +19,7 @@ import {
   removeTrackUploadRequest,
 } from '@/services/tracks';
 import { useAllTracks, useAllTracksActions } from '@/stores/all-tracks';
+import { useNowPlaying } from '@/stores/now-playing';
 
 import { EditTrackModal } from './EditTrackModal';
 import { TrackCardPlayButton } from './TrackCardPlayButton';
@@ -40,7 +41,8 @@ export const TrackCard: FC<Props> = ({
   refreshPage,
 }) => {
   const track = useAllTracks(({ data }) => data.get(trackId));
-  const { editTrack } = useAllTracksActions();
+  const { addTracks, editTrack, removeTrack } = useAllTracksActions();
+  const { cur, clearTrack } = useNowPlaying();
 
   const queryClient = useQueryClient();
 
@@ -88,29 +90,51 @@ export const TrackCard: FC<Props> = ({
 
   const removeUploadMutation = useMutation({
     mutationFn: removeTrackUploadRequest,
+    onMutate: () => {
+      const curAudiofile = track?.audioFile;
+      editTrack(trackId, { audioFile: undefined });
+      removeUploadModal.toggle(false);
+      if (cur?.id === trackId) {
+        clearTrack();
+      }
+      return curAudiofile;
+    },
     onSuccess: () => {
       toast('Track upload removed');
       removeUploadMutation.reset();
-      queryClient.invalidateQueries({ queryKey: ['all-tracks'] });
-      removeUploadModal.toggle(false);
-      refreshPage?.();
+      // queryClient.invalidateQueries({ queryKey: ['all-tracks'] });
+      // removeUploadModal.toggle(false);
+      // refreshPage?.();
     },
-    onError: () => {
+    onError: (err, vars, prevAudiofile) => {
       toast('Removing upload failed');
+      editTrack(trackId, { audioFile: prevAudiofile });
     },
   });
 
   const deleteTrackMutation = useMutation({
     mutationFn: deleteTracksRequest,
+    onMutate: () => {
+      const prev = track ? { ...track } : null;
+      removeTrack(trackId);
+      deleteTrackModal.toggle(false);
+      if (cur?.id === trackId) {
+        clearTrack();
+      }
+      return prev;
+    },
     onSuccess: () => {
       toast('Track deleted');
       deleteTrackMutation.reset();
-      queryClient.invalidateQueries({ queryKey: ['all-tracks'] });
-      deleteTrackModal.toggle(false);
-      refreshPage?.();
+      // queryClient.invalidateQueries({ queryKey: ['all-tracks'] });
+      // deleteTrackModal.toggle(false);
+      // refreshPage?.();
     },
-    onError: () => {
+    onError: (err, vars, prev) => {
       toast('track delete failed');
+      if (prev) {
+        addTracks([prev]);
+      }
     },
   });
 

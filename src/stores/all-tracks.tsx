@@ -34,8 +34,9 @@ export function useAllTracks<T>(selector: (store: AllTracksStore) => T): T {
 }
 
 type AllTracksActions = {
-  // addTracks: (tracks: Track[]) => void;
+  addTracks: (tracks: Track[]) => void;
   editTrack: (id: string, update: Partial<Omit<Track, 'id'>>) => void;
+  removeTrack: (id: string) => void;
 };
 
 const AllTracksActionsContext = createContext<AllTracksActions | null>(null);
@@ -78,13 +79,27 @@ export const AllTracksStoreProvider: FC<{
     [store],
   );
 
+  const removeTrack = useCallback(
+    (id: string) => {
+      store.setState(({ data }) => {
+        const newData = new Map(data);
+        newData.delete(id);
+        return { data: newData };
+      });
+    },
+    [store],
+  );
+
   const [prev, setPrev] = useState(tracks);
   if (tracks !== prev && !!tracks) {
     setPrev(tracks);
     addTracks(tracks);
   }
 
-  const actions = useMemo<AllTracksActions>(() => ({ editTrack }), [editTrack]);
+  const actions = useMemo<AllTracksActions>(
+    () => ({ addTracks, editTrack, removeTrack }),
+    [addTracks, editTrack, removeTrack],
+  );
 
   return (
     <AllTacksContext.Provider value={store}>
